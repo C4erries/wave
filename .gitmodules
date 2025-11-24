@@ -1,0 +1,6 @@
+[submodule "wave-mq"]
+	path = wave-mq
+	url = https://github.com/C4erries/wave-mq.git
+[submodule "wave-ui"]
+	path = wave-ui
+	url = https://github.com/C4erries/wave-ui.git
