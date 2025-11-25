@@ -1,0 +1,27 @@
+services:
+  broker:
+    build:
+      context: ./wave-mq
+    container_name: wave-mq
+    ports:
+      - "7912:7912"
+      - "1883:1883"
+      - "8090:8090"
+    volumes:
+      - wave_data:/data
+
+  ui:
+    build:
+      context: ./wave-ui
+      args:
+        VITE_API_BASE_URL: ""
+        VITE_METRICS_URL: ""
+        VITE_USE_MOCKS: "false"
+    container_name: wave-ui
+    depends_on:
+      - broker
+    ports:
+      - "8080:80"
+
+volumes:
+  wave_data:
