@@ -3,6 +3,11 @@ services:
     build:
       context: ./wave-mq
     container_name: wave-mq
+    command:
+      - "-data-dir=/data"
+      - "-bind=:7912"
+      - "-mqtt=:1883"
+      - "-http=:8090"
     ports:
       - "7912:7912"
       - "1883:1883"
