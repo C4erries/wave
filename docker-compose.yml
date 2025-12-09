@@ -4,9 +4,10 @@ services:
       context: ./wave-mq
     container_name: wave-mq-1
     networks:
-      default:
+      wave-net:
         aliases:
           - broker
+          - broker1
     command:
       - "-broker-id=1"
       - "-controller=raft"
@@ -29,6 +30,10 @@ services:
     build:
       context: ./wave-mq
     container_name: wave-mq-2
+    networks:
+      wave-net:
+        aliases:
+          - broker2
     command:
       - "-broker-id=2"
       - "-controller=raft"
@@ -59,7 +64,12 @@ services:
       - broker2
     ports:
       - "8080:80"
+    networks:
+      wave-net:
 
 volumes:
   wave_data1:
   wave_data2:
+
+networks:
+  wave-net:
