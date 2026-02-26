@@ -1,56 +1,20 @@
 services:
-  broker1:
+  broker:
     build:
       context: ./wave-mq
-    container_name: wave-mq-1
-    networks:
-      wave-net:
-        aliases:
-          - broker
-          - broker1
+    container_name: wave-mq
     command:
-      - "-broker-id=1"
-      - "-controller=raft"
-      - "-raft-bind=broker1:9001"
-      - "-raft-peer=broker1:9001,broker2:9001"
-      - "-raft-dir=/data/raft"
       - "-data-dir=/data"
       - "-bind=:7912"
       - "-mqtt=:1883"
       - "-http=:8090"
-      - "-replication=true"
-    volumes:
-      - wave_data1:/data
     ports:
       - "7912:7912"
       - "1883:1883"
-      - "8091:8090"
-
-  broker2:
-    build:
-      context: ./wave-mq
-    container_name: wave-mq-2
-    networks:
-      wave-net:
-        aliases:
-          - broker2
-    command:
-      - "-broker-id=2"
-      - "-controller=raft"
-      - "-raft-bind=broker2:9001"
-      - "-raft-peer=broker1:9001,broker2:9001"
-      - "-raft-dir=/data/raft"
-      - "-data-dir=/data"
-      - "-bind=:7912"
-      - "-mqtt=:1883"
-      - "-http=:8090"
-      - "-replication=true"
+      - "8090:8090"
     volumes:
-      - wave_data2:/data
-    ports:
-      - "8912:7912"
-      - "2883:1883"
-      - "8092:8090"
+      - wave_data:/data
+
   ui:
     build:
       context: ./wave-ui
@@ -60,16 +24,9 @@ services:
         VITE_USE_MOCKS: "false"
     container_name: wave-ui
     depends_on:
-      - broker1
-      - broker2
+      - broker
     ports:
       - "8080:80"
-    networks:
-      wave-net:
 
 volumes:
-  wave_data1:
-  wave_data2:
-
-networks:
-  wave-net:
+  wave_data:
