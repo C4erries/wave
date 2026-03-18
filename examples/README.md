@@ -4,6 +4,7 @@ Examples are organized first by language, then by integration style:
 
 - `examples/python/mbctl`
 - `examples/python/http`
+- `examples/python/sdk`
 - `examples/matlab/mbctl`
 - `examples/matlab/mqtt`
 
