@@ -14,7 +14,7 @@ values = [
 
 scriptPath = mfilename("fullpath");
 scriptDir = fileparts(scriptPath);
-repoRoot = fileparts(fileparts(scriptDir));
+repoRoot = fileparts(fileparts(fileparts(scriptDir)));
 mbctlPath = fullfile(repoRoot, "examples", "bin", "mbctl.exe");
 
 if ~isfile(mbctlPath)

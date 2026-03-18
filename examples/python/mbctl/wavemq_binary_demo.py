@@ -16,7 +16,7 @@ class MBctlError(RuntimeError):
 
 
 def default_mbctl_path() -> Path:
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[3]
     return repo_root / "examples" / "bin" / "mbctl.exe"
 
 
