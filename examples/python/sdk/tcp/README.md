@@ -22,5 +22,6 @@ Simple in-file variants:
 
 - `examples/python/sdk/tcp/simple/producer.py`
 - `examples/python/sdk/tcp/simple/consumer.py`
+- `examples/python/sdk/tcp/simple/replay_consumer.py`
 
 These do not use command-line arguments. Change the constants at the top of the file and run them directly.

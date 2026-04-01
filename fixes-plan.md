@@ -1,165 +1,70 @@
 # Fixes Plan
 
-## Scope
+Priority: stabilize single-node first, then preview expansion.
 
-- `wave-mq`
-- `wave-python-sdk`
-- `examples`
+## Part 1: Single-Node Stability Gate (Independent)
 
-## Findings
+Goal: no data surprises in single-node mode before preview.
 
-### P0
+### 1.1 Retention Policy (explicit contract)
+- Default delete policy must stay OFF:
+  - `-retention-bytes = -1`
+  - `-retention-hours = 0`
+- Retention deletion is opt-in only.
+- Size-based retention is active only when `retention-bytes > 0`.
+- Age-based retention is active only when `retention-hours > 0`.
+- Topic-level retention overrides remain supported, but default behavior is no deletion.
 
-1. Ack происходит до replication/ISR durability.
-   - Project: `wave-mq`
-   - Files:
-     - [broker.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/broker.go:870)
-     - [broker.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/broker.go:882)
-     - [broker.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/broker.go:887)
-     - [broker.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/broker.go:891)
-     - [controller.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/controller/controller.go:206)
-   - Result:
-     - лидер подтверждает запись после локального append и сразу делает её читаемой через local high watermark;
-     - replication/ISR progress в path подтверждения записи не участвует.
-   - Impact:
-     - при падении лидера до catch-up follower возможна потеря уже acked и уже читаемых сообщений.
+### 1.2 Offset Store Durability
+- Compact/recover/reopen path must remain crash-safe for single-node usage.
+- `offsets.log` replace flow must be durability-safe enough for restart and power-loss windows.
 
-### P1
+### 1.3 Single-Node Acceptance
+- No accidental segment deletion on default config.
+- Offsets survive restart/recover cycles.
+- Single-node smoke path remains stable with retention disabled by default.
 
-2. После failover/restart follower не отрезает дивергентный локальный хвост.
-   - Project: `wave-mq`
-   - Files:
-     - [wal_sink.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/replication/wal_sink.go:27)
-     - [wal_sink.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/replication/wal_sink.go:29)
-     - [partition_replicator.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/replication/partition_replicator.go:103)
-     - [log.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/storage/log.go:585)
-   - Result:
-     - `leaderHighWatermark` в replication sink игнорируется;
-     - при расхождении логов replication path не использует truncate, хотя storage API для этого уже есть.
-   - Impact:
-     - stale suffix может остаться на диске после смены лидера/restart и позже вернуться в работу.
+## Part 2: Cluster and Replication Correctness (Independent)
 
-3. HTTP transport в Python SDK не сохраняет arbitrary bytes как bytes.
-   - Projects:
-     - `wave-python-sdk`
-     - `wave-mq`
-   - Files:
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:515)
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:511)
-     - [api.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/httpapi/api.go:971)
-     - [api.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/httpapi/api.go:330)
-     - [api.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/httpapi/api.go:1134)
-   - Result:
-     - SDK кодирует non-UTF8 payload как строку `base64:...`;
-     - HTTP API сохраняет эту строку как literal payload, а не как декодированные байты.
-   - Impact:
-     - `transport="http"` неэквивалентен `transport="tcp"`;
-     - cross-transport roundtrip для binary payload ломается.
+Goal: fix cluster-grade correctness risks without blocking Part 1.
 
-4. Replication worker пинит leader endpoint при старте и не пересобирается при смене advertised address.
-   - Project: `wave-mq`
-   - Files:
-     - [manager.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/replication/manager.go:146)
-     - [manager.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/replication/manager.go:201)
-     - [manager.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/replication/manager.go:211)
-   - Result:
-     - leader broker snapshot берётся один раз на старте worker;
-     - критерий изменения assignment не учитывает host/port и metadata version.
-   - Impact:
-     - после redeploy/restart с новым endpoint follower может зависнуть на устаревшем адресе.
+### 2.1 Delivery Semantics
+- `P0`: ack currently happens before replication/ISR durability.
+- Target policy already chosen: strict quorum durability semantics.
 
-5. В static/single-controller режиме restart не восстанавливает сохранённую replica layout, а пересчитывает её заново.
-   - Project: `wave-mq`
-   - Files:
-     - [controller.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/controller/controller.go:53)
-     - [controller.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/controller/controller.go:59)
-     - [controller.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/controller/controller.go:247)
-   - Result:
-     - recovered topic metadata используется не полностью;
-     - replica placement после restart может вычисляться заново.
-   - Impact:
-     - в static multi-broker сценарии restart может бесшумно перетасовать leaders/replicas.
+### 2.2 Divergence Handling
+- `P1`: follower restart/failover path does not truncate divergent local tail.
+- Replication alignment must handle stale suffix correctly.
 
-### P2
+### 2.3 Replication Worker Address Drift
+- `P1`: running worker keeps stale leader endpoint if address changes.
+- Assignment/update logic must include endpoint refresh criteria.
 
-6. `auto_route=True` в Python SDK сейчас мёртвый публичный API.
-   - Project: `wave-python-sdk`
-   - Files:
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:305)
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:316)
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:333)
-   - Result:
-     - параметр принимается и экспонируется наружу, но request paths его не используют.
-   - Impact:
-     - API обещает routing behavior, которого фактически нет.
+### 2.4 Controller Scope
+- `single` mode is treated as single-node support path.
+- Static multi-broker in `single` mode is not a release-gate path for preview.
 
-7. HTTP fetch в Python SDK тихо игнорирует `max_bytes`.
-   - Project: `wave-python-sdk`
-   - Files:
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:187)
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:188)
-     - [client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/client.py:193)
-   - Result:
-     - HTTP transport не применяет `max_bytes` и формирует окно чтения по `high_watermark - offset + 1`.
-   - Impact:
-     - поведение SDK по памяти/latency расходится между TCP и HTTP transport.
+## Part 3: SDK and Example Consistency (Independent)
 
-8. Error taxonomy в HTTP SDK и consumer examples слишком грубая.
-   - Projects:
-     - `wave-python-sdk`
-     - `examples`
-   - Files:
-     - [errors.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/src/wavemq/errors.py:79)
-     - [consumer.py](C:/Users/Pavel/GolandProjects/wave/examples/python/sdk/http/consumer.py:61)
-     - [consumer.py](C:/Users/Pavel/GolandProjects/wave/examples/python/sdk/http/consumer.py:67)
-     - [consumer.py](C:/Users/Pavel/GolandProjects/wave/examples/python/sdk/http/consumer.py:86)
-     - [consumer.py](C:/Users/Pavel/GolandProjects/wave/examples/python/sdk/tcp/consumer.py:70)
-     - [consumer.py](C:/Users/Pavel/GolandProjects/wave/examples/python/sdk/tcp/consumer.py:76)
-     - [consumer.py](C:/Users/Pavel/GolandProjects/wave/examples/python/sdk/tcp/consumer.py:95)
-   - Result:
-     - HTTP `404` сводится к одному типу ошибки;
-     - examples ловят широкий `WaveMQBrokerError` и маскируют permanent failures polling loop’ом.
-   - Impact:
-     - typo в topic/group/partition может выглядеть как “данных пока нет”.
+Goal: make SDK behavior coherent across transports and easier for users.
 
-9. Компакция `offsets.log` не доведена до crash-safe rename.
-   - Project: `wave-mq`
-   - Files:
-     - [offset_store.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/offset_store.go:316)
-     - [offset_store.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/offset_store.go:362)
-     - [offset_store.go](C:/Users/Pavel/GolandProjects/wave/wave-mq/internal/broker/offset_store.go:384)
-   - Result:
-     - temp file sync есть;
-     - fsync parent directory после `os.Rename(...)` отсутствует.
-   - Impact:
-     - при crash/power loss вокруг rename можно потерять факт атомарной подмены файла.
+### 3.1 HTTP/TCP Parity
+- `P1`: HTTP transport currently breaks binary payload parity (`base64:` literal storage path).
+- Chosen direction: HTTP is first-class transport, parity required.
 
-10. HTTP transport parity в SDK покрыт слабо.
-    - Project: `wave-python-sdk`
-    - Files:
-      - [test_client.py](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/tests/unit/test_client.py:342)
-    - Result:
-      - тесты покрывают в основном happy-path со строковым payload;
-      - нет покрытия на binary payload, error mapping variants и cross-transport parity.
-    - Impact:
-      - регрессии в HTTP shim могут проходить незамеченными.
+### 3.2 Routing Contract
+- `P2`: `auto_route=True` is exposed but not implemented end-to-end.
+- Chosen direction: make `auto_route` real.
 
-### P3
+### 3.3 Fetch and Error Semantics
+- `P2`: HTTP fetch ignores `max_bytes`.
+- `P2`: HTTP error mapping is too coarse; examples can hide permanent failures behind polling loops.
 
-11. README и package docs уже расходятся с реальным поведением SDK.
-    - Project: `wave-python-sdk`
-    - Files:
-      - [README.md](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/README.md:3)
-      - [README.md](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/README.md:10)
-      - [README.md](C:/Users/Pavel/GolandProjects/wave/wave-python-sdk/README.md:30)
-    - Result:
-      - README одновременно заявляет общий API для TCP/HTTP и при этом содержит устаревшее описание возможностей.
-    - Impact:
-      - documentation drift и support friction после публикации пакета.
+### 3.4 Quality and Docs
+- Strengthen transport-parity tests (binary payload, error mapping variants, cross-transport checks).
+- Remove SDK README drift so docs match actual behavior.
 
-## Direction
-
-1. Сначала закрыть data-safety и replication semantics.
-2. Затем закрыть restart consistency и divergence handling.
-3. После этого определить статус HTTP transport: first-class transport или ограниченный compatibility path.
-4. Затем ужесточить error model в SDK/examples и подтянуть tests/docs до реального поведения.
+## Execution Notes
+- Parts 1, 2, and 3 are intentionally independent tracks.
+- Current gate for preview is Part 1 completion.
+- Parts 2 and 3 can proceed in parallel without changing Part 1 acceptance criteria.
