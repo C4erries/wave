@@ -18,6 +18,8 @@ Consumer:
 python ./examples/python/sdk/tcp/consumer.py --broker 127.0.0.1:7912 --group demo-group
 ```
 
+The TCP example flow uses numeric payloads, so it is useful for offset replay and analysis reruns.
+
 Simple in-file variants:
 
 - `examples/python/sdk/tcp/simple/producer.py`

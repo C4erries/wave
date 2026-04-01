@@ -13,12 +13,11 @@ Layouts:
 - `examples/python/sdk/tcp`
 - `examples/python/sdk/http`
 
-Both folders contain:
-
-- `producer.py`
-- `consumer.py`
+Both folders contain a producer and a consumer script.
 
 The scripts use the same `WaveMQClient` API and differ only by transport and default broker address.
 
-Inside `examples/python/sdk/tcp` there is also a `simple` folder with producer/consumer scripts that do not parse any input arguments. All settings are changed directly in code.
-That `simple` folder also includes `replay_consumer.py` for re-reading numeric data from a chosen offset without committing by default.
+The TCP folder also contains `simple` in-file producer/consumer/replay scripts for quick manual checks and offset reruns.
+
+Use the TCP examples when you want to work with raw binary payloads.
+Use the HTTP examples when you want a broker-address-only flow over the HTTP API.

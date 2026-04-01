@@ -1,6 +1,8 @@
-# wave examples for `wave-mq`
+# wave examples
 
-Examples are organized first by language, then by integration style:
+Examples are organized first by language, then by access method.
+
+## Layout
 
 - `examples/python/mbctl`
 - `examples/python/http`
@@ -8,20 +10,35 @@ Examples are organized first by language, then by integration style:
 - `examples/matlab/mbctl`
 - `examples/matlab/mqtt`
 
-Build `mbctl` once if you want the `mbctl`-based demos:
+## Recommended preview order
+
+1. Start the single-node preview stack:
+
+   ```powershell
+   docker compose -f .\docker-compose.single.yml up --build
+   ```
+
+2. Use the Python SDK or HTTP examples for broker-address-only flows.
+3. Use `mbctl` if you want a native binary-protocol CLI client.
+4. Use MATLAB `mqttclient` if you want the shortest MATLAB-native messaging demo.
+
+## Build `mbctl`
+
+The `mbctl`-based examples expect a local binary in `examples/bin/mbctl.exe`.
+
+Build it once from the repo root:
 
 ```powershell
-cd C:\Users\Pavel\GolandProjects\wave
 powershell -ExecutionPolicy Bypass -File .\examples\build-mbctl.ps1
 ```
 
-Main entry points:
+## Entry points
 
-- Python overview: `examples/python/README.md`
-- MATLAB overview: `examples/matlab/README.md`
+- Python examples: [python/README.md](python/README.md)
+- MATLAB examples: [matlab/README.md](matlab/README.md)
+- Broker blackbox suites: [../wave-mq/examples/README.md](../wave-mq/examples/README.md)
 
-Typical broker startup:
+## Preview notes
 
-```powershell
-docker compose -f .\docker-compose.single.yml up --build broker
-```
+- The root [README.md](../README.md) is the main preview entrypoint.
+- Root [plan.md](../plan.md) lists the remaining work.
