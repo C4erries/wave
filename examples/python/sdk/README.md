@@ -1,12 +1,11 @@
 # Python SDK demos
 
-These demos use the installed `wavemq` Python package.
+These demos use the released `wave-python-sdk` package.
 
 Install the SDK first:
 
 ```powershell
-cd C:\Users\Pavel\GolandProjects\wave\wave-python-sdk
-python -m pip install -e .
+python -m pip install wave-python-sdk
 ```
 
 Layouts:
@@ -20,3 +19,5 @@ Both folders contain:
 - `consumer.py`
 
 The scripts use the same `WaveMQClient` API and differ only by transport and default broker address.
+
+Inside `examples/python/sdk/tcp` there is also a `simple` folder with producer/consumer scripts that do not parse any input arguments. All settings are changed directly in code.

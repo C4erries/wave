@@ -3,8 +3,7 @@
 Install the SDK first:
 
 ```powershell
-cd C:/Users/Pavel/GolandProjects/wave/wave-python-sdk
-python -m pip install -e .
+python -m pip install wave-python-sdk
 ```
 
 Producer:
@@ -18,3 +17,10 @@ Consumer:
 ```powershell
 python ./examples/python/sdk/tcp/consumer.py --broker 127.0.0.1:7912 --group demo-group
 ```
+
+Simple in-file variants:
+
+- `examples/python/sdk/tcp/simple/producer.py`
+- `examples/python/sdk/tcp/simple/consumer.py`
+
+These do not use command-line arguments. Change the constants at the top of the file and run them directly.

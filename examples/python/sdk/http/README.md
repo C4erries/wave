@@ -3,8 +3,7 @@
 Install the SDK first:
 
 ```powershell
-cd C:\Users\Pavel\GolandProjects\wave\wave-python-sdk
-python -m pip install -e .
+python -m pip install wave-python-sdk
 ```
 
 Producer:

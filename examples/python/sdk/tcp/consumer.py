@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import struct
 import sys
 import time
 
@@ -11,8 +12,8 @@ try:
     from wavemq import WaveMQBrokerError, WaveMQClient
 except ImportError as exc:  # pragma: no cover - import failure path
     raise SystemExit(
-        "wavemq SDK is not installed. Run: "
-        r"cd C:\Users\Pavel\GolandProjects\wave\wave-python-sdk && python -m pip install -e ."
+        "wave-python-sdk is not installed. Run: "
+        "python -m pip install wave-python-sdk"
     ) from exc
 
 
@@ -38,6 +39,14 @@ def decode_bytes(value: bytes | None) -> str:
     if value is None:
         return ""
     return value.decode("utf-8", errors="replace")
+
+
+def decode_float64(value: bytes | None) -> float:
+    if value is None:
+        raise ValueError("record value is empty")
+    if len(value) != 8:
+        raise ValueError(f"expected 8 bytes for float64, got {len(value)}")
+    return struct.unpack(">d", value)[0]
 
 
 def resolve_start_offset(client: WaveMQClient, topic: str, partition: int, start_from: str, fallback_offset: int) -> int:
@@ -94,11 +103,13 @@ def main() -> int:
                 for record in fetched.records:
                     if record.offset < next_offset:
                         continue
+                    float_value = decode_float64(record.value)
                     print(
-                        "offset={offset} key={key} value={value}".format(
+                        "offset={offset} key={key} float64={value} bytes=0x{raw}".format(
                             offset=record.offset,
                             key=decode_bytes(record.key),
-                            value=decode_bytes(record.value),
+                            value=float_value,
+                            raw=(record.value or b"").hex(),
                         )
                     )
                     client.commit_offset(args.group, args.topic, args.partition, record.offset)

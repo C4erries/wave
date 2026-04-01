@@ -11,8 +11,8 @@ try:
     from wavemq import WaveMQBrokerError, WaveMQClient
 except ImportError as exc:  # pragma: no cover - import failure path
     raise SystemExit(
-        "wavemq SDK is not installed. Run: "
-        r"cd C:\Users\Pavel\GolandProjects\wave\wave-python-sdk && python -m pip install -e ."
+        "wave-python-sdk is not installed. Run: "
+        "python -m pip install wave-python-sdk"
     ) from exc
 
 
