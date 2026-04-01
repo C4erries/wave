@@ -43,9 +43,10 @@ def decode_float64(value: bytes | None) -> float:
 def render_record(record) -> None:
     float_value = decode_float64(record.value)
     print(
-        "offset={offset} key={key} float64={value} bytes=0x{raw}".format(
+        "offset={offset} key={key} content_type={content_type} float64={value} bytes=0x{raw}".format(
             offset=record.offset,
             key=decode_bytes(record.key),
+            content_type=record.content_type or "-",
             value=float_value,
             raw=(record.value or b"").hex(),
         )

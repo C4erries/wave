@@ -19,7 +19,7 @@ BROKER = "127.0.0.1:7912"
 TOPIC = "wave.sdk.demo"
 GROUP = "demo-group"
 PARTITION = 0
-START_FROM = "latest"
+START_FROM = "earliest"
 START_OFFSET = 0
 POLL_INTERVAL_SECONDS = 1.0
 MAX_MESSAGES = 0
@@ -42,9 +42,10 @@ def decode_float64(value: bytes | None) -> float:
 def render_record(record) -> None:
     float_value = decode_float64(record.value)
     print(
-        "offset={offset} key={key} float64={value} bytes=0x{raw}".format(
+        "offset={offset} key={key} content_type={content_type} float64={value} bytes=0x{raw}".format(
             offset=record.offset,
             key=decode_bytes(record.key),
+            content_type=record.content_type or "-",
             value=float_value,
             raw=(record.value or b"").hex(),
         )

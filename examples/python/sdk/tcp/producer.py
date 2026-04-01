@@ -15,6 +15,7 @@ DEFAULT_BROKER = "127.0.0.1:7912"
 DEFAULT_TOPIC = "wave.sdk.demo"
 DEFAULT_KEY = "demo-key"
 DEFAULT_VALUES = [12.5, -3.25, 42.125]
+DEFAULT_CONTENT_TYPE = "application/x.float64"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -57,10 +58,16 @@ def main() -> int:
 
             for value in values:
                 payload = encode_float64(value)
-                result = client.produce_one(args.topic, args.partition, payload, key=args.key)
+                result = client.produce_one(
+                    args.topic,
+                    args.partition,
+                    payload,
+                    key=args.key,
+                    content_type=DEFAULT_CONTENT_TYPE,
+                )
                 print(
                     f"produced partition={args.partition} base_offset={result.base_offset} "
-                    f"float64={value} bytes=0x{payload.hex()}"
+                    f"content_type={DEFAULT_CONTENT_TYPE} float64={value} bytes=0x{payload.hex()}"
                 )
         return 0
     except (OSError, WaveMQBrokerError, ValueError) as exc:

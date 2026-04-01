@@ -6,14 +6,7 @@ from __future__ import annotations
 import struct
 import sys
 
-try:
-    from wavemq import WaveMQBrokerError, WaveMQClient
-except ImportError as exc:  # pragma: no cover - import failure path
-    raise SystemExit(
-        "wave-python-sdk is not installed. Run: "
-        "python -m pip install wave-python-sdk"
-    ) from exc
-
+from wavemq import WaveMQBrokerError, WaveMQClient
 
 BROKER = "127.0.0.1:7912"
 TOPIC = "wave.sdk.demo"
@@ -22,6 +15,7 @@ TOPIC_PARTITIONS = 1
 REPLICATION_FACTOR = 1
 KEY = "demo-key"
 VALUES = [12.5, -3.25, 42.125]
+CONTENT_TYPE = "application/x.float64"
 
 
 def encode_float64(value: float) -> bytes:
@@ -40,10 +34,16 @@ def main() -> int:
 
             for value in VALUES:
                 payload = encode_float64(value)
-                result = client.produce_one(TOPIC, PARTITION, payload, key=KEY)
+                result = client.produce_one(
+                    TOPIC,
+                    PARTITION,
+                    payload,
+                    key=KEY,
+                    content_type=CONTENT_TYPE,
+                )
                 print(
                     f"produced partition={PARTITION} base_offset={result.base_offset} "
-                    f"float64={value} bytes=0x{payload.hex()}"
+                    f"content_type={CONTENT_TYPE} float64={value} bytes=0x{payload.hex()}"
                 )
         return 0
     except (OSError, WaveMQBrokerError, ValueError) as exc:
