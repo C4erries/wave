@@ -25,7 +25,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="wave-mq SDK HTTP producer demo")
     parser.add_argument("--broker", default=DEFAULT_BROKER, help="broker address")
     parser.add_argument("--topic", default=DEFAULT_TOPIC, help="topic name")
-    parser.add_argument("--partition", type=int, default=0, help="partition id")
     parser.add_argument("--key", default=DEFAULT_KEY, help="message key")
     parser.add_argument("--message", action="append", default=[], help="message value; may be repeated")
     parser.add_argument("--partitions", type=int, default=1, help="topic partition count")
@@ -52,8 +51,8 @@ def main() -> int:
                 print(f"topic={args.topic} already exists")
 
             for message in messages:
-                result = client.produce(args.topic, args.partition, [message], key=args.key)
-                print(f"produced partition={args.partition} base_offset={result.base_offset} value={message}")
+                result = client.produce_one(args.topic, message, key=args.key)
+                print(f"produced partition={result.partition} base_offset={result.base_offset} value={message}")
         return 0
     except (OSError, WaveMQBrokerError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)

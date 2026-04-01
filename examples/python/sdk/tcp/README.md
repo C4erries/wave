@@ -18,6 +18,10 @@ Consumer:
 python ./examples/python/sdk/tcp/consumer.py --broker 127.0.0.1:7912 --group demo-group
 ```
 
+If the group has no committed offset yet, the consumer starts from the beginning.
+If the group already exists, it resumes from the last committed offset plus one.
+The producer example uses keyed routing through the normal high-level SDK API and prints the chosen partition.
+
 The TCP example flow uses numeric payloads, so it is useful for offset replay and analysis reruns.
 
 Simple in-file variants:

@@ -27,7 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--topic", default=DEFAULT_TOPIC, help="topic name")
     parser.add_argument("--group", default=DEFAULT_GROUP, help="consumer group")
     parser.add_argument("--partition", type=int, default=0, help="partition id")
-    parser.add_argument("--start-from", choices=("latest", "earliest", "offset"), default="latest", help="where to start when no committed offset exists")
+    parser.add_argument("--start-from", choices=("latest", "earliest", "offset"), default="earliest", help="where to start when no committed offset exists")
     parser.add_argument("--offset", type=int, default=0, help="starting offset when --start-from=offset")
     parser.add_argument("--poll-interval", type=float, default=1.0, help="poll interval in seconds")
     parser.add_argument("--max-messages", type=int, default=0, help="stop after this many records; 0 means keep polling")

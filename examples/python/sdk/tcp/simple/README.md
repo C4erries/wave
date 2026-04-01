@@ -8,8 +8,9 @@ Change the settings directly in the file:
 - `BROKER`
 - `TOPIC`
 - `GROUP`
-- `PARTITION`
+- `KEY`
 - `VALUES`
+- `PARTITION` in the consumer scripts
 - poll/start settings in `consumer.py`
 - replay settings in `replay_consumer.py`
 
@@ -22,3 +23,4 @@ python ./examples/python/sdk/tcp/simple/replay_consumer.py
 ```
 
 `replay_consumer.py` is for re-reading numeric data from a chosen offset, for example to rerun analysis from an earlier point. By default it does not commit offsets.
+The producer uses keyed routing and prints the broker-chosen partition for each message.

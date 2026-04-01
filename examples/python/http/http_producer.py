@@ -10,7 +10,7 @@ import argparse
 import sys
 from typing import Sequence
 
-from http_demo_common import DEFAULT_PARTITIONS, DEFAULT_REPLICATION_FACTOR, DEFAULT_TIMEOUT, ensure_topic, produce_partition_message
+from http_demo_common import DEFAULT_PARTITIONS, DEFAULT_REPLICATION_FACTOR, DEFAULT_TIMEOUT, ensure_topic, produce_message
 
 
 DEFAULT_TOPIC = "wave.http.demo"
@@ -22,7 +22,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="wave-mq HTTP producer demo")
     parser.add_argument("--addr", default="http://127.0.0.1:8090", help="HTTP addr, e.g. http://127.0.0.1:8090")
     parser.add_argument("--topic", default=DEFAULT_TOPIC, help="topic name")
-    parser.add_argument("--partition", type=int, default=0, help="partition id")
     parser.add_argument("--key", default=DEFAULT_KEY, help="message key used for routing")
     parser.add_argument("--message", action="append", default=[], help="message value; may be repeated")
     parser.add_argument("--partitions", type=int, default=DEFAULT_PARTITIONS, help="topic partition count")
@@ -55,10 +54,9 @@ def main() -> int:
             print(f"topic={args.topic} created")
 
         for message in messages:
-            result = produce_partition_message(
+            result = produce_message(
                 args.addr,
                 args.topic,
-                args.partition,
                 message,
                 args.key,
                 timeout=args.timeout,

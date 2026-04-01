@@ -22,7 +22,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="wave-mq SDK TCP producer demo")
     parser.add_argument("--broker", default=DEFAULT_BROKER, help="broker address")
     parser.add_argument("--topic", default=DEFAULT_TOPIC, help="topic name")
-    parser.add_argument("--partition", type=int, default=0, help="partition id")
     parser.add_argument("--key", default=DEFAULT_KEY, help="message key")
     parser.add_argument("--value", action="append", type=float, default=[], help="float value; may be repeated")
     parser.add_argument("--partitions", type=int, default=1, help="topic partition count")
@@ -60,13 +59,12 @@ def main() -> int:
                 payload = encode_float64(value)
                 result = client.produce_one(
                     args.topic,
-                    args.partition,
                     payload,
                     key=args.key,
                     content_type=DEFAULT_CONTENT_TYPE,
                 )
                 print(
-                    f"produced partition={args.partition} base_offset={result.base_offset} "
+                    f"produced partition={result.partition} base_offset={result.base_offset} "
                     f"content_type={DEFAULT_CONTENT_TYPE} float64={value} bytes=0x{payload.hex()}"
                 )
         return 0

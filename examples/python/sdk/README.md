@@ -16,6 +16,8 @@ Layouts:
 Both folders contain a producer and a consumer script.
 
 The scripts use the same `WaveMQClient` API and differ only by transport and default broker address.
+On the first run for a new group they start from the beginning, and on later runs they resume from the last committed offset plus one.
+The normal producer path routes by key and does not ask you to choose a partition.
 
 The TCP folder also contains `simple` in-file producer/consumer/replay scripts for quick manual checks and offset reruns.
 

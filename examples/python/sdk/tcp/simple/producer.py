@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-"""Minimal SDK producer demo over TCP with in-file settings only."""
-
 from __future__ import annotations
 
 import struct
@@ -10,11 +7,10 @@ from wavemq import WaveMQBrokerError, WaveMQClient
 
 BROKER = "127.0.0.1:7912"
 TOPIC = "wave.sdk.demo"
-PARTITION = 0
 TOPIC_PARTITIONS = 1
 REPLICATION_FACTOR = 1
 KEY = "demo-key"
-VALUES = [12.5, -3.25, 42.125]
+VALUES = [1.4, -3.22, 2.28, 8.8]
 CONTENT_TYPE = "application/x.float64"
 
 
@@ -36,13 +32,12 @@ def main() -> int:
                 payload = encode_float64(value)
                 result = client.produce_one(
                     TOPIC,
-                    PARTITION,
                     payload,
                     key=KEY,
                     content_type=CONTENT_TYPE,
                 )
                 print(
-                    f"produced partition={PARTITION} base_offset={result.base_offset} "
+                    f"produced partition={result.partition} base_offset={result.base_offset} "
                     f"content_type={CONTENT_TYPE} float64={value} bytes=0x{payload.hex()}"
                 )
         return 0
