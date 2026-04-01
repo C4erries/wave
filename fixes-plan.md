@@ -23,6 +23,7 @@ Goal: no data surprises in single-node mode before preview.
 - No accidental segment deletion on default config.
 - Offsets survive restart/recover cycles.
 - Single-node smoke path remains stable with retention disabled by default.
+- Replay/simple usage stays documented and usable for offset-based reruns during analysis.
 
 ## Part 2: Cluster and Replication Correctness (Independent)
 

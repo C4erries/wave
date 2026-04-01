@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import struct
 import sys
-import time
 
 try:
     from wavemq import WaveMQBrokerError, WaveMQClient
@@ -41,10 +40,19 @@ def decode_float64(value: bytes | None) -> float:
     return struct.unpack(">d", value)[0]
 
 
-def main() -> int:
-    next_offset = REPLAY_FROM_OFFSET
-    seen = 0
+def render_record(record) -> None:
+    float_value = decode_float64(record.value)
+    print(
+        "offset={offset} key={key} float64={value} bytes=0x{raw}".format(
+            offset=record.offset,
+            key=decode_bytes(record.key),
+            value=float_value,
+            raw=(record.value or b"").hex(),
+        )
+    )
 
+
+def main() -> int:
     try:
         with WaveMQClient(BROKER, transport="tcp") as client:
             print("transport=tcp")
@@ -55,48 +63,20 @@ def main() -> int:
             print(f"replay_from_offset={REPLAY_FROM_OFFSET}")
             print(f"commit_after_read={COMMIT_AFTER_READ}")
 
-            while MAX_MESSAGES <= 0 or seen < MAX_MESSAGES:
-                try:
-                    fetched = client.fetch(TOPIC, PARTITION, next_offset)
-                except WaveMQBrokerError:
-                    time.sleep(POLL_INTERVAL_SECONDS)
-                    continue
+            result = client.consume_poll(
+                GROUP,
+                TOPIC,
+                PARTITION,
+                next_offset=REPLAY_FROM_OFFSET,
+                max_messages=MAX_MESSAGES,
+                poll_interval=POLL_INTERVAL_SECONDS,
+                commit=COMMIT_AFTER_READ,
+                stop_when_caught_up=STOP_WHEN_CAUGHT_UP,
+                on_record=render_record,
+            )
 
-                if not fetched.records:
-                    if STOP_WHEN_CAUGHT_UP and fetched.high_watermark >= 0 and next_offset > fetched.high_watermark:
-                        print("replay complete: reached current high watermark")
-                        break
-
-                    time.sleep(POLL_INTERVAL_SECONDS)
-                    continue
-
-                for record in fetched.records:
-                    if record.offset < next_offset:
-                        continue
-
-                    float_value = decode_float64(record.value)
-                    print(
-                        "offset={offset} key={key} float64={value} bytes=0x{raw}".format(
-                            offset=record.offset,
-                            key=decode_bytes(record.key),
-                            value=float_value,
-                            raw=(record.value or b"").hex(),
-                        )
-                    )
-
-                    if COMMIT_AFTER_READ:
-                        client.commit_offset(GROUP, TOPIC, PARTITION, record.offset)
-
-                    next_offset = record.offset + 1
-                    seen += 1
-                    if MAX_MESSAGES > 0 and seen >= MAX_MESSAGES:
-                        break
-
-                if MAX_MESSAGES <= 0 or seen < MAX_MESSAGES:
-                    if STOP_WHEN_CAUGHT_UP and fetched.high_watermark >= 0 and next_offset > fetched.high_watermark:
-                        print("replay complete: reached current high watermark")
-                        break
-                    time.sleep(POLL_INTERVAL_SECONDS)
+            if STOP_WHEN_CAUGHT_UP and result.high_watermark >= 0 and result.next_offset > result.high_watermark:
+                print("replay complete: reached current high watermark")
 
         return 0
     except (OSError, WaveMQBrokerError, ValueError) as exc:

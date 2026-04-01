@@ -7,7 +7,7 @@ import argparse
 import struct
 import sys
 
-from wavemq import TopicExistsError, WaveMQBrokerError, WaveMQClient
+from wavemq import WaveMQBrokerError, WaveMQClient
 
 
 
@@ -45,15 +45,19 @@ def main() -> int:
 
     try:
         with WaveMQClient(args.broker, transport="tcp") as client:
-            try:
-                client.create_topic(args.topic, partitions=args.partitions, replication_factor=args.replication_factor)
+            ensured = client.ensure_topic(
+                args.topic,
+                partitions=args.partitions,
+                replication_factor=args.replication_factor,
+            )
+            if ensured.created:
                 print(f"topic={args.topic} created")
-            except TopicExistsError:
+            else:
                 print(f"topic={args.topic} already exists")
 
             for value in values:
                 payload = encode_float64(value)
-                result = client.produce(args.topic, args.partition, [payload], key=args.key)
+                result = client.produce_one(args.topic, args.partition, payload, key=args.key)
                 print(
                     f"produced partition={args.partition} base_offset={result.base_offset} "
                     f"float64={value} bytes=0x{payload.hex()}"

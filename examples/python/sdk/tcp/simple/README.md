@@ -1,6 +1,7 @@
 # Python SDK TCP simple demos
 
 These scripts are the same TCP SDK producer/consumer flow, but without command-line arguments.
+The consumer path uses the small helper layer from `wave-python-sdk` so the script stays short.
 
 Change the settings directly in the file:
 

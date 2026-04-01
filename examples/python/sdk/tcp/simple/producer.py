@@ -7,7 +7,7 @@ import struct
 import sys
 
 try:
-    from wavemq import TopicExistsError, WaveMQBrokerError, WaveMQClient
+    from wavemq import WaveMQBrokerError, WaveMQClient
 except ImportError as exc:  # pragma: no cover - import failure path
     raise SystemExit(
         "wave-python-sdk is not installed. Run: "
@@ -31,19 +31,16 @@ def encode_float64(value: float) -> bytes:
 def main() -> int:
     try:
         with WaveMQClient(BROKER, transport="tcp") as client:
-            try:
-                client.create_topic(
-                    TOPIC,
-                    partitions=TOPIC_PARTITIONS,
-                    replication_factor=REPLICATION_FACTOR,
-                )
-                print(f"topic={TOPIC} created")
-            except TopicExistsError:
-                print(f"topic={TOPIC} already exists")
+            result = client.ensure_topic(
+                TOPIC,
+                partitions=TOPIC_PARTITIONS,
+                replication_factor=REPLICATION_FACTOR,
+            )
+            print(f"topic={result.topic} ready partitions={result.partitions}")
 
             for value in VALUES:
                 payload = encode_float64(value)
-                result = client.produce(TOPIC, PARTITION, [payload], key=KEY)
+                result = client.produce_one(TOPIC, PARTITION, payload, key=KEY)
                 print(
                     f"produced partition={PARTITION} base_offset={result.base_offset} "
                     f"float64={value} bytes=0x{payload.hex()}"
