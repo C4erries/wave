@@ -4,3 +4,6 @@
 [submodule "wave-ui"]
 	path = wave-ui
 	url = https://github.com/C4erries/wave-ui.git
+[submodule "wave-python-sdk"]
+	path = wave-python-sdk
+	url = git@github.com:C4erries/wave-python-sdk.git
