@@ -7,7 +7,7 @@
 *  defined in the ps5000aApi.h C header file. 
 *  It also has the enums and structs required by the (wrapped) function calls.
 *   
-* Copyright © 2013-2018 Pico Technology Ltd. See LICENSE file for terms.
+* Copyright ï¿½ 2013-2018 Pico Technology Ltd. See LICENSE file for terms.
 *
 ******************************************************************************/
 
@@ -414,6 +414,15 @@ namespace PS5000AImports
 												 uint timebase,
 												 int noSamples,
 												 out int timeIntervalNanoseconds,
+												 out int maxSamples,
+												 uint segmentIndex);
+
+		[DllImport(_DRIVER_FILENAME, EntryPoint = "ps5000aGetTimebase2")]
+		public static extern uint GetTimebase2(
+												 short handle,
+												 uint timebase,
+												 int noSamples,
+												 out float timeIntervalNanoseconds,
 												 out int maxSamples,
 												 uint segmentIndex);
 

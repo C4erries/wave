@@ -53,6 +53,14 @@ namespace PS5000A
         private double dt_ = 104 * 1.0E-9;
         private double[] arrA;
 
+        private int _currentSampleRateHz = 0;
+        private CancellationTokenSource _continuousCts;
+        private readonly object _captureLock = new object();
+        private System.Windows.Forms.Button _buttonContinuous;
+        private System.Windows.Forms.CheckBox _checkBoxBroker;
+        private System.Windows.Forms.TextBox _textBoxBrokerUrl;
+        private System.Windows.Forms.Label _labelBrokerStatus;
+
         /*
          * частоты от 0 Гц 10Mhz
          * dt =10^-7
@@ -70,6 +78,7 @@ namespace PS5000A
             progressBar1.Text = "Готов к работе";
             timer1.Interval = 300;
             timer1.Tick += new EventHandler(Timer1_Tick);
+            InitBrokerControls();
         }
 
         private int all, save = 0;
@@ -474,13 +483,14 @@ namespace PS5000A
 
         //Самый времяемкий метод
 
-        private void start(uint sampleCountBefore = 50000, uint sampleCountAfter = 50000, int write_every = 100)
+        private void start(uint sampleCountBefore = 50000, uint sampleCountAfter = 50000, int write_every = 100,
+            Imports.Range? rangeOverride = null, bool? bwFilterOverride = null, uint? timebaseOverride = null)
         {
             uint all_ = sampleCountAfter + sampleCountBefore;
             uint status;
             int ms;
             status = Imports.MemorySegments(_handle, 1, out ms);
-            Imports.Range IR = (Imports.Range)comboRangeA.SelectedIndex;
+            Imports.Range IR = rangeOverride ?? (Imports.Range)comboRangeA.SelectedIndex;
             status = Imports.SetChannel(_handle, Imports.Channel.ChannelA, 1, Imports.Coupling.PS5000A_AC, IR, 0);
             // Voltage_Range = 200;
             //  status = Imports.SetChannel(_handle, Imports.Channel.ChannelA, 1, Imports.Coupling.PS5000A_AC, Imports.Range.Range_200mV, 0);
@@ -490,7 +500,7 @@ namespace PS5000A
             const uint delay = 0;
             const short threshold = 20000;
             const short auto = 22222;
-            if (checkBox1.Checked)
+            if (bwFilterOverride ?? checkBox1.Checked)
             {
                 status = Imports.SetBandwidthFilter(_handle, Imports.Channel.ChannelA, Imports.BandwidthLimiter.PS5000A_BW_20MHZ);
             }
@@ -515,12 +525,20 @@ namespace PS5000A
             status = Imports.SetDataBuffers(_handle, Imports.Channel.ChannelA, maxBuffersA, minBuffersA, (int)sampleCountAfter + (int)sampleCountBefore, 0, Imports.RatioMode.None);
 
 
+            uint tb = timebaseOverride ?? uint.Parse(this.textBox9.Text);
+            {
+                float intervalNs;
+                int maxSamp;
+                if (Imports.GetTimebase2(_handle, tb, (int)all_, out intervalNs, out maxSamp, 0) == StatusCodes.PICO_OK && intervalNs > 0)
+                    _currentSampleRateHz = (int)Math.Round(1e9 / intervalNs);
+            }
+
             _ready = false;
             _callbackDelegate = BlockCallback;
             do
             {
                 retry = false;
-                status = Imports.RunBlock(_handle, (int)sampleCountBefore, (int)sampleCountAfter, uint.Parse(this.textBox9.Text), out timeIndisposed, 0, _callbackDelegate, IntPtr.Zero);
+                status = Imports.RunBlock(_handle, (int)sampleCountBefore, (int)sampleCountAfter, tb, out timeIndisposed, 0, _callbackDelegate, IntPtr.Zero);
                 if (status == (short)StatusCodes.PICO_POWER_SUPPLY_CONNECTED || status == (short)StatusCodes.PICO_POWER_SUPPLY_NOT_CONNECTED || status == (short)StatusCodes.PICO_POWER_SUPPLY_UNDERVOLTAGE)
                 {
                     status = Imports.ChangePowerSource(_handle, status);
@@ -2466,7 +2484,7 @@ namespace PS5000A
                     break;
                 }
                 save = (int)i + 1;
-                start(samples1, samples2, 1);
+                lock (_captureLock) { start(samples1, samples2, 1); }
                 if ((i % 10) == 1)
                 {
 
@@ -2633,6 +2651,7 @@ namespace PS5000A
             //dir = String.Concat(dir, "Measurement.txt");
             dir = String.Concat(dir, textBox20.Text);
             WorkWithFiles.Save2File(dir, arrA);
+            PublishCapture(arrA);
             if (stop_flag)
             {
                 save = 0; stop_flag = false;
@@ -3712,6 +3731,180 @@ namespace PS5000A
             NoOffset(arrA);
             string path = String.Concat(textBox3.Text, DateTime.Now.ToString().Replace(':', '_'), "TempCapture.txt");
             WorkWithFiles.Save2File(path, arrA);
+        }
+
+        // ──────────────────────────────────────────────────────────────────────
+        // Wave broker integration
+        // ──────────────────────────────────────────────────────────────────────
+
+        private void InitBrokerControls()
+        {
+            // Group box to keep all broker controls together on tabPage2
+            var grp = new System.Windows.Forms.GroupBox
+            {
+                Text = "Публикация в брокер wave-mq",
+                Location = new System.Drawing.Point(250, 15),
+                Size = new System.Drawing.Size(360, 160),
+            };
+
+            _checkBoxBroker = new System.Windows.Forms.CheckBox
+            {
+                Text = "Включить публикацию",
+                Location = new System.Drawing.Point(10, 20),
+                AutoSize = true,
+            };
+            _checkBoxBroker.CheckedChanged += (s, e) =>
+            {
+                BrokerPublisher.Enabled = _checkBoxBroker.Checked;
+            };
+
+            var lblUrl = new System.Windows.Forms.Label
+            {
+                Text = "Адрес брокера:",
+                Location = new System.Drawing.Point(10, 50),
+                AutoSize = true,
+            };
+
+            _textBoxBrokerUrl = new System.Windows.Forms.TextBox
+            {
+                Text = "http://localhost:8090",
+                Location = new System.Drawing.Point(10, 68),
+                Width = 220,
+            };
+            _textBoxBrokerUrl.TextChanged += (s, e) =>
+            {
+                BrokerPublisher.BrokerUrl = _textBoxBrokerUrl.Text.Trim();
+            };
+
+            var btnCheck = new System.Windows.Forms.Button
+            {
+                Text = "Проверить",
+                Location = new System.Drawing.Point(238, 66),
+                Width = 100,
+            };
+            btnCheck.Click += async (s, e) =>
+            {
+                BrokerPublisher.BrokerUrl = _textBoxBrokerUrl.Text.Trim();
+                bool ok = await BrokerPublisher.CheckTopicExistsAsync();
+                _labelBrokerStatus.Text = ok ? "Брокер: ОК" : "Брокер: нет топика";
+                _labelBrokerStatus.ForeColor = ok ? System.Drawing.Color.Green : System.Drawing.Color.Red;
+            };
+
+            _labelBrokerStatus = new System.Windows.Forms.Label
+            {
+                Text = "Брокер: не проверен",
+                Location = new System.Drawing.Point(10, 98),
+                AutoSize = true,
+                ForeColor = System.Drawing.Color.Gray,
+            };
+
+            _buttonContinuous = new System.Windows.Forms.Button
+            {
+                Text = "Непрерывная публикация",
+                Location = new System.Drawing.Point(10, 118),
+                Width = 200,
+            };
+            _buttonContinuous.Click += buttonContinuous_Click;
+
+            grp.Controls.Add(_checkBoxBroker);
+            grp.Controls.Add(lblUrl);
+            grp.Controls.Add(_textBoxBrokerUrl);
+            grp.Controls.Add(btnCheck);
+            grp.Controls.Add(_labelBrokerStatus);
+            grp.Controls.Add(_buttonContinuous);
+
+            tabPage2.Controls.Add(grp);
+        }
+
+        private void PublishCapture(double[] data)
+        {
+            if (!BrokerPublisher.Enabled) return;
+            int n = data.Length;
+            var samples = new float[n];
+            for (int i = 0; i < n; i++) samples[i] = (float)data[i];
+            long tsNs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1_000_000L;
+            byte[] frame = BrokerPublisher.EncodeFrame(tsNs, _currentSampleRateHz, n, 0, 2, samples);
+            BrokerPublisher.PublishAsync(frame);
+        }
+
+        private void buttonContinuous_Click(object sender, EventArgs e)
+        {
+            if (_continuousCts != null)
+            {
+                _continuousCts.Cancel();
+                _continuousCts = null;
+                _buttonContinuous.Text = "Непрерывная публикация";
+                return;
+            }
+
+            // Read all UI state on UI thread before entering background task
+            uint samples1, samples2, tb;
+            Imports.Range range;
+            bool bwFilter;
+            ushort rangeMilliV;
+            try
+            {
+                samples1 = uint.Parse(textBox13.Text);
+                samples2 = uint.Parse(textBox10.Text);
+                tb = uint.Parse(textBox9.Text);
+                range = (Imports.Range)comboRangeA.SelectedIndex;
+                bwFilter = checkBox1.Checked;
+                rangeMilliV = inputRanges[comboRangeA.SelectedIndex];
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("Не удалось прочитать параметры: " + ex.Message);
+                return;
+            }
+
+            if (_handle == 0)
+            {
+                System.Windows.Forms.MessageBox.Show("Осциллограф не подключён. Откройте устройство (кнопка Open).");
+                return;
+            }
+
+            _continuousCts = new CancellationTokenSource();
+            var cts = _continuousCts;
+            _buttonContinuous.Text = "Стоп";
+
+            Task.Run(() =>
+            {
+                double mult = 1.0 / 2.0 * rangeMilliV / 65536.0;
+                uint total = samples1 + samples2;
+
+                while (!cts.IsCancellationRequested)
+                {
+                    try
+                    {
+                        long[] localMas;
+                        lock (_captureLock)
+                        {
+                            masA = new long[total];
+                            start(samples1, samples2, 1, range, bwFilter, tb);
+                            localMas = masA;
+                        }
+
+                        var arr = new double[total];
+                        for (uint j = 0; j < total; j++)
+                            arr[j] = localMas[j] * mult;
+
+                        PublishCapture(arr);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("[Continuous] " + ex.Message);
+                        System.Threading.Thread.Sleep(500);
+                    }
+
+                    System.Threading.Thread.Sleep(10);
+                }
+
+                this.Invoke((Action)(() =>
+                {
+                    _buttonContinuous.Text = "Непрерывная публикация";
+                    _continuousCts = null;
+                }));
+            }, cts.Token);
         }
 
     }
