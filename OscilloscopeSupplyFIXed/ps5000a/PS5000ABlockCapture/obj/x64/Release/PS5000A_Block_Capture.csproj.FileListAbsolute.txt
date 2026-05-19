@@ -1,0 +1,48 @@
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe.config
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csprojAssemblyReference.cache
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.Properties.Resources.resources
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.PS5000ABlockForm.resources
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.GenerateResource.cache
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.CoreCompileInputs.cache
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.exe
+C:\Users\user1\Source\Repos\Ilya1212\OscilloscopeSupply\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe.config
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.Properties.Resources.resources
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.PS5000ABlockForm.resources
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.GenerateResource.cache
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.exe
+C:\Users\Admin\Desktop\OscilloscopeSupplyFIX\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe.config
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.AssemblyReference.cache
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.Properties.Resources.resources
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.PS5000ABlockForm.resources
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.GenerateResource.cache
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.CoreCompileInputs.cache
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.exe
+C:\Users\Leshii\Desktop\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe.config
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.exe
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.Properties.Resources.resources
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.PS5000ABlockForm.resources
+C:\Users\DM\Desktop\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.GenerateResource.Cache
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe.config
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.exe
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\bin\x64\Release\PS5000ABlockCapture.pdb
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csprojAssemblyReference.cache
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.Properties.Resources.resources
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A.PS5000ABlockForm.resources
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.GenerateResource.cache
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000A_Block_Capture.csproj.CoreCompileInputs.cache
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.exe
+C:\Users\tiama\OneDrive\Рабочий стол\bratishka\OscilloscopeSupplyFIXed\ps5000a\PS5000ABlockCapture\obj\x64\Release\PS5000ABlockCapture.pdb
