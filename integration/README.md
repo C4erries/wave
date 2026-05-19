@@ -38,6 +38,16 @@ wave-gen --waveform=sine --freq=440 --duration=30 --rate=5
 
 Full option list: `wave-gen --help`
 
+## Operators
+
+`wave-fft` subscribes to a raw topic and publishes amplitude spectra:
+
+```bash
+wave-fft --input-topic raw.gen.chA --output-topic spectrum.gen.chA
+```
+
+Full option list: `wave-fft --help`
+
 ## Tests
 
 ```bash

@@ -17,6 +17,7 @@ dev = ["pytest"]
 
 [project.scripts]
 wave-gen = "wave_integration.producers.synth:main"
+wave-fft = "wave_integration.operators.fft_op:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
