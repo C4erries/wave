@@ -1,43 +1,35 @@
-# Project Plan
+Окей. План на ~неделю, с расчётом «MVP сначала, осцилл потом, улучшения в конце».
 
-## Status
-- Single-node preview is ready: retention is off by default, WAL reopen is stable, and `make bb-full` passes.
-- The preview entrypoints are documented in the root `README.md`, and the module READMEs now match the current broker/UI/SDK behavior.
-- `wave-ui` builds and lints, and the main preview screens are aligned with the current broker contract.
-- `wave-python-sdk` provides the TCP SDK and helper API for simple scenarios.
+**Фаза 0 — фиксация дизайна (полдня).** До любого кода: записываешь на бумаге формат Record (что лежит в `value` побайтно), имена топиков (`raw.<src>.<ch>` и так далее), сигнатуру `Operator.process()`. Это не *писать* код, это *решить* — иначе будешь переделывать по три раза. Параллельно — в `wave-mq` создаёшь топики `raw.gen.chA`, `spectrum.gen.chA` через HTTP API или `mbctl`, проверяешь что produce/fetch базово работает через Python SDK.
 
-## Remaining Work
+**Фаза 1 — MVP end-to-end на синтетике (1.5 дня).** Это и есть «уже можно показать». Делаешь три вещи и склеиваешь:
 
-### 1. `wave-mq`: cluster / replication correctness
-- Make quorum discipline explicit for multi-node scenarios so acks do not outrun durable replication.
-- Finish truncation and alignment behavior for divergent tails after restart or failover.
-- Ensure the replication worker does not keep a stale advertised leader endpoint after address changes.
-- Keep single-node as the current preview gate; treat cluster preview as the next stage.
+— синтетический генератор на Python: один скрипт, в цикле генерирует блоки синуса/шума/чирпа и публикует в `raw.gen.chA` через твой SDK;
 
-### 2. `wave-python-sdk`: transport parity, routing, and producer UX
-- Make `auto_route` actually work instead of being a public no-op flag.
-- Align HTTP and TCP transport behavior, especially for `max_bytes` and binary payload handling.
-- Keep typed error mapping consistent across both transports.
-- Keep keyed produce as the default high-level write path everywhere user-facing:
-  SDK, examples, and other convenience clients should publish by key and let the broker choose the partition.
-- Keep explicit partition produce available only as an advanced / low-level path for diagnostics,
-  replay, and manual control.
-- Review all client-facing surfaces for this rule:
-  `wave-python-sdk`, examples, `mbctl`, and UI produce flows should not present explicit partition choice
-  as the primary path.
+— минимальный фреймворк оператора (один файл, базовый класс на 30 строк) + конкретный FFT-оператор на `numpy.fft.rfft`. Подписывается на `raw.gen.chA`, publish в `spectrum.gen.chA`. Запускается как обычный python-скрипт;
 
-### 3. `wave-ui`: browser-level preview smoke
-- Add one browser smoke path for Dashboard, Topics, Topic Details, Consumer Groups, and Metrics.
-- Verify the UI against a dockerized preview stack and reachable endpoint assumptions.
-- If any screen is still experimental, mark it clearly in the UI.
+— расширение UI: одна новая вкладка «Лаборатория», два графика рядом — осциллограмма (по `raw.gen.chA`) и спектр (по `spectrum.gen.chA`). HTTP-поллинг каждые 300-500мс через существующий `/api/topics/.../messages`. Берёшь любую chart-библиотеку (recharts уже наверняка стоит, или uPlot для real-time).
 
-### 4. Documentation / release hygiene
-- Keep the root README as the preview entrypoint and keep the module READMEs aligned with it.
-- Keep experimental cluster and transport limitations clearly labeled in the docs.
-- Keep the example README files in sync with runnable scripts, compose files, and current default flows.
-- Document the producer contract clearly:
-  default produce is keyed and broker-routed; explicit partition produce is optional and secondary.
+К концу фазы: `docker compose up` + генератор + FFT-процесс + UI → в браузере живая осциллограмма синуса, рядом спектр с пиком на частоте. **Это уже достаточно для защиты в крайнем случае.** Дальше всё — улучшения.
 
-## Principle
-- This file is the only source of truth for remaining work.
-- Old sub-plans and developer notes are intentionally retired.
+**Фаза 2 — второй оператор (полдня).** Stats-оператор: RMS, пик, среднее по тому же `raw.gen.chA`, publish в `stats.gen.chA`. В UI добавляешь три числовых индикатора рядом с графиками. Цель — *доказать самому себе и преподу*, что архитектура работает: добавили оператор, ничего больше не трогали, всё взлетело. В тексте курсовой этот момент — отдельный аргумент в пользу выбранной архитектуры.
+
+**Фаза 3 — режимы через YAML (1 день).** Маленький оркестратор-скрипт на Python: читает `graph.yaml`, в котором написано «запусти FFT с такими параметрами на таких топиках, запусти Stats…», стартует операторы как потоки в одном процессе (либо как subprocess — что удобнее окажется). Два-три заранее заготовленных конфига (`fft_only.yaml`, `fft_and_stats.yaml`, `all.yaml`). В UI — простой dropdown «режим», который шлёт REST-запрос оркестратору на смену конфига. Это та самая «модовая система», про которую ты говорил с самого начала.
+
+**Фаза 4 — адаптер осциллографа (1-1.5 дня).** Берёшь существующий `PS5000ABlockCapture.cs`, находишь место где сейчас вызывается `WorkWithFiles` для записи в `.txt`, рядом добавляешь `HttpClient.PostAsync` на `http://localhost:8090/api/topics/raw.osc.chN/produce` для каждого канала. Никаких NuGet-зависимостей, только System.Net. Если упрётся (старый .NET, проблемы со сборкой) — запасной путь это Python-сайдкар через `watchdog`, мониторящий папку с `.txt` файлами; этот путь точно сработает, но компромиссный по латентности. К концу фазы: переключаешь в UI режим в `fft_only`, дёргаешь кнопку захвата в C#, видишь живой спектр от реального сигнала.
+
+**Фаза 5 — на оставшееся время, выбираешь 1-2 пункта.** Это не обязательные вещи, но любая поднимает «инженерное качество» работы. По убыванию того, что я бы делал в первую очередь:
+
+— **Replay-демо**: маленький скрипт или UI-кнопка «прогнать сессию с offset 0 ещё раз», возможно с замедлением. Это бесплатно (commit-log уже умеет), но на защите очень эффектно: «смотрите, я записал эксперимент, теперь могу прокрутить его обратно через ту же обработку». Это **уникальное свойство твоей архитектуры**, которого у файлового подхода нет. Полдня кода + большой эффект в тексте курсовой.
+
+— **SSE-эндпоинт на брокере** вместо поллинга. Десятки строк Go, можно вынести как «расширение брокера, выполненное в рамках этой работы». Заявляешь это как отдельный вклад. Полдня-день.
+
+— **Threshold-оператор + events.*** + лог уведомлений в UI. Полдня. Демонстрирует «событийную ветку» в дополнение к континуальной.
+
+— **Archive-консьюмер**, пишущий `parquet` или `.csv` для возможной выгрузки. Полдня. Показывает, что у одного топика может быть несколько независимых потребителей.
+
+**Фаза 6 — сборка демо-сценария и текст (день).** Один `docker-compose.yml`, который поднимает всё (брокер + UI + оркестратор + генератор; адаптер осцилла отдельно, на хосте). Сценарий защиты: «вот режим только спектр → переключаю в полный → запускаю осцилл → видно живой спектр сигнала». Записываешь скринкаст на случай если в день защиты что-то не запустится (классика). Параллельно скармливаешь иишке весь код + структуру + эту схему → она пишет текст работы.
+
+---
+
+Бюджет по дням: 0.5 + 1.5 + 0.5 + 1 + 1.5 + 1 + 1 = **7 рабочих дней**. С учётом того, что часть параллелизуется (UI можно делать на фоне операторов), и что у тебя есть готовый SDK и брокер — должно влезть, если не зависнуть в перфекционизме. **Чёткое правило: после Фазы 1 у тебя уже есть демонстрируемый проект.** Всё, что после — улучшения. Если что-то пойдёт не так с осциллом (Фаза 4) — переключаешься на Фазу 5 и сдаёшь без него; курсовая всё равно состоятельная, потому что «второй источник» (синтетика) обоснован как часть архитектуры.
