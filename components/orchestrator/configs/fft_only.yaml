@@ -1,0 +1,19 @@
+name: "fft_only"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_chA
+    type: synth
+    params:
+      waveform: sine
+      freq: 1000
+      topic: raw.gen.chA
+      rate: 10
+
+operators:
+  - name: fft_gen_chA
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-gen-chA

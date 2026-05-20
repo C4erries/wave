@@ -1,0 +1,2 @@
+[console_scripts]
+wave-orchestrator = wave_orchestrator.__main__:main

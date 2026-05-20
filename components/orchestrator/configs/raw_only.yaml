@@ -1,0 +1,13 @@
+name: "raw_only"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_chA
+    type: synth
+    params:
+      waveform: sine
+      freq: 1000
+      topic: raw.gen.chA
+      rate: 10
+
+# No operators — raw stream only; wave-ui can subscribe to raw.gen.chA directly.

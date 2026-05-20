@@ -1,0 +1,35 @@
+name: "multi_signal"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_chA_sine
+    type: synth
+    params:
+      waveform: sine
+      freq: 1000
+      topic: raw.gen.chA
+      rate: 10
+
+  - name: gen_chB_chirp
+    type: synth
+    params:
+      waveform: chirp
+      chirp_f1: 100
+      chirp_f2: 5000
+      topic: raw.gen.chB
+      rate: 10
+
+operators:
+  - name: fft_chA
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-gen-chA
+
+  - name: fft_chB
+    type: fft
+    params:
+      input_topic: raw.gen.chB
+      output_topic: spectrum.gen.chB
+      group_id: fft-gen-chB
