@@ -3821,9 +3821,7 @@ namespace PS5000A
             };
             tabPublish.Controls.Add(grp);
 
-            // Insert right after "Сбор данных" (tabPage2 is at index 2)
-            int insertAt = tabControl1.TabPages.IndexOf(tabPage2) + 1;
-            tabControl1.TabPages.Insert(insertAt, tabPublish);
+            tabControl1.TabPages.Add(tabPublish);
         }
 
         private void PublishCapture(double[] data)
