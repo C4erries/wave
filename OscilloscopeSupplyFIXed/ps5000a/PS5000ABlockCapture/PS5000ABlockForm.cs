@@ -3822,7 +3822,7 @@ namespace PS5000A
             int n = data.Length;
             var samples = new float[n];
             for (int i = 0; i < n; i++) samples[i] = (float)data[i];
-            long tsNs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1_000_000L;
+            long tsNs = (long)(DateTimeOffset.UtcNow - new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalMilliseconds * 1000000L;
             byte[] frame = BrokerPublisher.EncodeFrame(tsNs, _currentSampleRateHz, n, 0, 2, samples);
             BrokerPublisher.PublishAsync(frame);
         }
