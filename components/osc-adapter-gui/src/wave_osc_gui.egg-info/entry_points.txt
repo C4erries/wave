@@ -1,0 +1,2 @@
+[console_scripts]
+wave-osc-gui = wave_osc_gui.__main__:main

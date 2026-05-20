@@ -1,47 +1,67 @@
 # Wave
 
-Wave is a preview-stage message broker stack with a custom binary protocol, MQTT, HTTP admin APIs, consumer groups, and a React UI.
+Streaming oscilloscope data pipeline: PicoScope 5000a (or synthetic source) →
+message broker → FFT operator → web UI with live charts.
 
-## Current shape
+## Quick start
 
-- Single-node broker is the supported preview path.
-- Cluster/Raft and follower replication are experimental and should be treated as the next stage.
-- Python SDK is released and supports TCP and HTTP transports.
-- Examples are split by language and access method.
+```bash
+git clone --recurse-submodules <repo-url>
+cd wave
+scripts/demo.sh
+# Open http://localhost:8080/lab
+```
 
-## Preview quick start
+## Components
 
-1. Start the single-node stack:
+| Path | Description |
+|------|-------------|
+| [components/integration/](components/integration/) | Python pipeline layer (codec, sources, producers, operators) |
+| [components/osc-adapter-gui/](components/osc-adapter-gui/) | tkinter GUI adapter for the oscilloscope |
+| [components/orchestrator/](components/orchestrator/) | Planned YAML orchestrator |
+| [wave-mq/](wave-mq/) | Message broker (Go, submodule) |
+| [wave-ui/](wave-ui/) | React web UI (submodule) |
+| [wave-python-sdk/](wave-python-sdk/) | Python client SDK (submodule) |
+| [OscilloscopeSupplyFIXed/](OscilloscopeSupplyFIXed/) | C# PicoScope 5000a application |
+| [deploy/](deploy/) | Docker Compose files |
+| [scripts/](scripts/) | demo.sh, dev.sh, stop.sh |
+| [docs/](docs/) | Architecture documentation |
 
-   ```powershell
-   docker compose -f .\docker-compose.single.yml up --build
-   ```
+## CLI commands
 
-2. Open the UI:
+```bash
+# Activate integration venv first:
+source components/integration/.venv/bin/activate
 
-   - `http://localhost:8080`
+wave-gen --waveform=sine --freq=1000            # synthetic generator
+wave-osc --source=synth --synth-freq=1500       # oscilloscope adapter
+wave-fft --input-topic=raw.gen.chA              # FFT operator
+wave-osc-gui                                    # GUI adapter (separate venv)
+```
 
-3. Use the broker endpoints directly if needed:
+## Architecture
 
-   - Binary protocol: `localhost:7912`
-   - MQTT: `localhost:1883`
-   - HTTP API: `http://localhost:8090`
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full data flow, topic table,
+and binary frame format.
 
-4. Use the docs and examples that match your access path:
+## Broker endpoints
 
-   - Broker: [wave-mq/README.md](wave-mq/README.md)
-   - UI: [wave-ui/README.md](wave-ui/README.md)
-   - Python SDK: [wave-python-sdk/README.md](wave-python-sdk/README.md)
-   - Examples: [examples/README.md](examples/README.md)
+| Endpoint | Description |
+|----------|-------------|
+| `localhost:7912` | Binary protocol (TCP) |
+| `localhost:1883` | MQTT |
+| `http://localhost:8090` | HTTP admin API |
+| `http://localhost:8080` | Web UI |
 
-## Repository layout
+## Scripts
 
-- `wave-mq` - broker implementation
-- `wave-ui` - browser UI
-- `wave-python-sdk` - Python client SDK
-- `examples` - runnable demo scripts and smoke checks
+```bash
+scripts/demo.sh    # start full demo stack
+scripts/dev.sh     # start broker + UI only
+scripts/stop.sh    # stop everything
+```
 
-## Notes
+---
 
-- Root [`plan.md`](plan.md) is the only source of truth for remaining work.
-- `docker-compose.multi.yml` is the experimental multi-broker preview.
+> Legacy: `docker-compose.single.yml` / `docker-compose.multi.yml` in root still work
+> for running broker+UI without the Python pipeline.

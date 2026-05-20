@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Build context must be the repo root (wave/)
+# docker build -f deploy/Dockerfile.integration .
+COPY wave-python-sdk /app/wave-python-sdk
+COPY components/integration /app/integration
+
+RUN pip install --no-cache-dir -e /app/wave-python-sdk && \
+    pip install --no-cache-dir -e /app/integration
+
+# Specify command via compose, e.g.:
+#   command: wave-gen --waveform=sine --freq=1000 --rate=10
