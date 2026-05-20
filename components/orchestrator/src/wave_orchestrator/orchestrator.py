@@ -13,9 +13,10 @@ import yaml
 
 from wave_orchestrator.registry import build_command
 
-# Default state file lives inside the package source tree so the orchestrator
+# Default paths live inside the package source tree so the orchestrator
 # can be run from any working directory.
 _DEFAULT_RUNTIME_DIR = Path(__file__).resolve().parents[2] / ".runtime"
+_DEFAULT_CONFIGS_DIR = Path(__file__).resolve().parents[2] / "configs"
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +30,15 @@ class OrchestratorError(RuntimeError):
 
 
 class Orchestrator:
-    def __init__(self, state_file: Path | None = None) -> None:
+    def __init__(
+        self,
+        state_file: Path | None = None,
+        configs_dir: Path | None = None,
+    ) -> None:
         sf = state_file or (_DEFAULT_RUNTIME_DIR / "state.json")
         self._state_file = sf
         self._runtime_dir = sf.parent
+        self._configs_dir = Path(configs_dir) if configs_dir else _DEFAULT_CONFIGS_DIR
 
     # ------------------------------------------------------------------
     # Config parsing
@@ -97,6 +103,44 @@ class Orchestrator:
             self._terminate(proc)
         self._write_state({})
         logger.info("All processes stopped, state cleared.")
+
+    def apply_graph(self, cfg: dict) -> None:
+        """Apply a config dict directly (no YAML file). Used by POST /apply."""
+        self._validate(cfg)
+        old_state = self._read_state()
+        old_mode = old_state.get("mode", "(none)") if old_state else "(none)"
+        if old_state:
+            for proc in old_state.get("processes", []):
+                self._terminate(proc)
+            self._write_state({})
+        logger.info("Mode transition (apply): %s → %s", old_mode, cfg["name"])
+        self._launch(cfg)
+
+    def list_configs(self) -> list[dict]:
+        """Return [{name, filename}] for all *.yaml files in configs_dir."""
+        if not self._configs_dir.exists():
+            return []
+        result = []
+        for p in sorted(self._configs_dir.glob("*.yaml")):
+            try:
+                cfg = self.load_config(str(p))
+                result.append({"name": cfg["name"], "filename": p.name})
+            except Exception:
+                result.append({"name": p.stem, "filename": p.name})
+        return result
+
+    def get_config(self, name: str) -> dict:
+        """Return the config dict for a preset identified by its 'name' field."""
+        if not self._configs_dir.exists():
+            raise ConfigError(f"Configs directory not found: {self._configs_dir}")
+        for p in sorted(self._configs_dir.glob("*.yaml")):
+            try:
+                cfg = self.load_config(str(p))
+                if cfg["name"] == name:
+                    return cfg
+            except Exception:
+                continue
+        raise ConfigError(f"Config '{name}' not found in {self._configs_dir}")
 
     def reload(self, config_path: str) -> None:
         # Broker retains all topic data across reloads: operators are stateless
