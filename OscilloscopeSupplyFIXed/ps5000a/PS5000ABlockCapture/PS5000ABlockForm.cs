@@ -3739,18 +3739,18 @@ namespace PS5000A
 
         private void InitBrokerControls()
         {
-            // Group box to keep all broker controls together on tabPage2
             var grp = new System.Windows.Forms.GroupBox
             {
                 Text = "Публикация в брокер wave-mq",
-                Location = new System.Drawing.Point(250, 15),
-                Size = new System.Drawing.Size(360, 160),
+                Location = new System.Drawing.Point(10, 10),
+                Size = new System.Drawing.Size(660, 200),
+                Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right,
             };
 
             _checkBoxBroker = new System.Windows.Forms.CheckBox
             {
                 Text = "Включить публикацию",
-                Location = new System.Drawing.Point(10, 20),
+                Location = new System.Drawing.Point(10, 25),
                 AutoSize = true,
             };
             _checkBoxBroker.CheckedChanged += (s, e) =>
@@ -3761,15 +3761,15 @@ namespace PS5000A
             var lblUrl = new System.Windows.Forms.Label
             {
                 Text = "Адрес брокера:",
-                Location = new System.Drawing.Point(10, 50),
+                Location = new System.Drawing.Point(10, 60),
                 AutoSize = true,
             };
 
             _textBoxBrokerUrl = new System.Windows.Forms.TextBox
             {
                 Text = "http://localhost:8090",
-                Location = new System.Drawing.Point(10, 68),
-                Width = 220,
+                Location = new System.Drawing.Point(10, 80),
+                Width = 280,
             };
             _textBoxBrokerUrl.TextChanged += (s, e) =>
             {
@@ -3779,8 +3779,8 @@ namespace PS5000A
             var btnCheck = new System.Windows.Forms.Button
             {
                 Text = "Проверить",
-                Location = new System.Drawing.Point(238, 66),
-                Width = 100,
+                Location = new System.Drawing.Point(300, 78),
+                Width = 110,
             };
             btnCheck.Click += async (s, e) =>
             {
@@ -3793,7 +3793,7 @@ namespace PS5000A
             _labelBrokerStatus = new System.Windows.Forms.Label
             {
                 Text = "Брокер: не проверен",
-                Location = new System.Drawing.Point(10, 98),
+                Location = new System.Drawing.Point(10, 115),
                 AutoSize = true,
                 ForeColor = System.Drawing.Color.Gray,
             };
@@ -3801,8 +3801,9 @@ namespace PS5000A
             _buttonContinuous = new System.Windows.Forms.Button
             {
                 Text = "Непрерывная публикация",
-                Location = new System.Drawing.Point(10, 118),
-                Width = 200,
+                Location = new System.Drawing.Point(10, 145),
+                Width = 220,
+                Height = 32,
             };
             _buttonContinuous.Click += buttonContinuous_Click;
 
@@ -3813,7 +3814,16 @@ namespace PS5000A
             grp.Controls.Add(_labelBrokerStatus);
             grp.Controls.Add(_buttonContinuous);
 
-            tabPage2.Controls.Add(grp);
+            var tabPublish = new System.Windows.Forms.TabPage
+            {
+                Text = "Публикация",
+                Name = "tabPagePublish",
+            };
+            tabPublish.Controls.Add(grp);
+
+            // Insert right after "Сбор данных" (tabPage2 is at index 2)
+            int insertAt = tabControl1.TabPages.IndexOf(tabPage2) + 1;
+            tabControl1.TabPages.Insert(insertAt, tabPublish);
         }
 
         private void PublishCapture(double[] data)
