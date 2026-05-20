@@ -1,0 +1,59 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/pavel/projects/wave/OscilloscopeSupplyFIXed/BrokerPublisherTest/BrokerPublisherTest.csproj": {}
+  },
+  "projects": {
+    "/home/pavel/projects/wave/OscilloscopeSupplyFIXed/BrokerPublisherTest/BrokerPublisherTest.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/pavel/projects/wave/OscilloscopeSupplyFIXed/BrokerPublisherTest/BrokerPublisherTest.csproj",
+        "projectName": "BrokerPublisherTest",
+        "projectPath": "/home/pavel/projects/wave/OscilloscopeSupplyFIXed/BrokerPublisherTest/BrokerPublisherTest.csproj",
+        "packagesPath": "/home/pavel/.nuget/packages/",
+        "outputPath": "/home/pavel/projects/wave/OscilloscopeSupplyFIXed/BrokerPublisherTest/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/pavel/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net48"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net48": {
+            "targetAlias": "net48",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net48": {
+          "targetAlias": "net48",
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
