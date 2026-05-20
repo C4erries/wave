@@ -13,11 +13,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+picoscope = ["picosdk>=1.1"]
 dev = ["pytest"]
 
 [project.scripts]
 wave-gen = "wave_integration.producers.synth:main"
 wave-fft = "wave_integration.operators.fft_op:main"
+wave-osc = "wave_integration.producers.osc:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
