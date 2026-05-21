@@ -1,69 +1,29 @@
 {
-  "mode": "multi_signal",
+  "mode": "harmonic_sweep",
   "processes": [
     {
       "name": "gen_chA",
       "type": "synth",
       "kind": "source",
-      "pid": 67489,
+      "pid": 79259,
       "cmd": [
         "wave-gen",
         "--waveform",
-        "sweep",
+        "harmonic",
         "--chirp-f1",
-        "200",
+        "80",
         "--chirp-f2",
-        "4000",
+        "500",
         "--sweep-period",
+        "12",
+        "--harmonics",
         "8",
         "--amplitude",
-        "1",
+        "1.0",
         "--topic",
         "raw.gen.chA",
         "--rate",
         "5",
-        "--channel-id",
-        "0",
-        "--freq",
-        "99",
-        "--broker",
-        "127.0.0.1:7912"
-      ]
-    },
-    {
-      "name": "gen_chB",
-      "type": "osc",
-      "kind": "source",
-      "pid": 67490,
-      "cmd": [
-        "wave-osc",
-        "--source",
-        "synth",
-        "--topic",
-        "raw.osc.chA",
-        "--synth-waveform",
-        "sine",
-        "--synth-freq",
-        "1000",
-        "--broker",
-        "127.0.0.1:7912"
-      ]
-    },
-    {
-      "name": "gen_chC",
-      "type": "synth",
-      "kind": "source",
-      "pid": 67491,
-      "cmd": [
-        "wave-gen",
-        "--waveform",
-        "sine",
-        "--freq",
-        "1000",
-        "--topic",
-        "raw.gen.chB",
-        "--rate",
-        "10",
         "--broker",
         "127.0.0.1:7912"
       ]
@@ -72,7 +32,7 @@
       "name": "fft_chA",
       "type": "fft",
       "kind": "operator",
-      "pid": 67513,
+      "pid": 79293,
       "cmd": [
         "wave-fft",
         "--input-topic",
@@ -80,75 +40,64 @@
         "--output-topic",
         "spectrum.gen.chA",
         "--group-id",
-        "fft-gen-chA",
+        "fft-harmonic-chA",
         "--broker",
         "127.0.0.1:7912"
       ]
     },
     {
-      "name": "fft_chB",
-      "type": "fft",
+      "name": "filter_chA",
+      "type": "filter",
       "kind": "operator",
-      "pid": 67514,
+      "pid": 79294,
       "cmd": [
-        "wave-fft",
+        "wave-filter",
         "--input-topic",
         "raw.gen.chA",
         "--output-topic",
-        "spectrum.gen.chB",
+        "filtered.gen.chA",
         "--group-id",
-        "fft-gen-chB",
+        "filter-harmonic",
+        "--low-hz",
+        "200",
+        "--high-hz",
+        "1500",
         "--broker",
         "127.0.0.1:7912"
       ]
     },
     {
-      "name": "fft_chC",
-      "type": "fft",
-      "kind": "operator",
-      "pid": 67515,
-      "cmd": [
-        "wave-fft",
-        "--input-topic",
-        "raw.gen.chB",
-        "--output-topic",
-        "spectrum.gen.chA",
-        "--group-id",
-        "fft-gen-chA",
-        "--broker",
-        "127.0.0.1:7912"
-      ]
-    },
-    {
-      "name": "fft_chD",
-      "type": "fft",
-      "kind": "operator",
-      "pid": 67516,
-      "cmd": [
-        "wave-fft",
-        "--input-topic",
-        "raw.osc.chA",
-        "--output-topic",
-        "spectrum.gen.chA",
-        "--group-id",
-        "fft-gen-chA",
-        "--broker",
-        "127.0.0.1:7912"
-      ]
-    },
-    {
-      "name": "Stats_chA",
+      "name": "stats_chA",
       "type": "stats",
       "kind": "operator",
-      "pid": 67517,
+      "pid": 79295,
       "cmd": [
         "wave-stats",
         "--input-topic",
-        "spectrum.gen.chA",
+        "raw.gen.chA",
         "--output-topic",
         "stats.gen.chA",
         "--group-id",
-        "stats-gen-chA",
+        "stats-harmonic",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "threshold_chA",
+      "type": "threshold",
+      "kind": "operator",
+      "pid": 79296,
+      "cmd": [
+        "wave-threshold",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "events.gen.chA",
+        "--group-id",
+        "threshold-harmonic",
+        "--threshold-mv",
+        "0.7",
         "--broker",
         "127.0.0.1:7912"
       ]

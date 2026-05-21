@@ -1,0 +1,50 @@
+name: "harmonic_sweep"
+broker: "127.0.0.1:7912"
+
+# Harmonic series: fundamental f0 sweeps 80→500 Hz over 12 s.
+# Spectrum shows a comb of peaks at f0, 2f0, 3f0 ... 8f0 with 1/k amplitude decay —
+# like a real string, pipe, or mechanical resonator changing pitch.
+sources:
+  - name: gen_chA
+    type: synth
+    params:
+      waveform: harmonic
+      chirp_f1: 80
+      chirp_f2: 500
+      sweep_period: 12
+      harmonics: 8
+      amplitude: 1.0
+      topic: raw.gen.chA
+      rate: 5
+
+operators:
+  - name: fft_chA
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-harmonic-chA
+
+  - name: filter_chA
+    type: filter
+    params:
+      input_topic: raw.gen.chA
+      output_topic: filtered.gen.chA
+      group_id: filter-harmonic
+      low_hz: 200
+      high_hz: 1500
+
+  - name: stats_chA
+    type: stats
+    params:
+      input_topic: raw.gen.chA
+      output_topic: stats.gen.chA
+      group_id: stats-harmonic
+
+  - name: threshold_chA
+    type: threshold
+    params:
+      input_topic: raw.gen.chA
+      output_topic: events.gen.chA
+      group_id: threshold-harmonic
+      threshold_mv: 0.7

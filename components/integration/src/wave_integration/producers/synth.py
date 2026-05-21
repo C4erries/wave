@@ -17,11 +17,12 @@ SAMPLE_RATE_HZ = 100_000
 
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="wave-integration synthetic signal generator")
-    p.add_argument("--waveform", choices=("sine", "noise", "chirp", "sweep"), default="sine")
+    p.add_argument("--waveform", choices=("sine", "noise", "chirp", "sweep", "harmonic"), default="sine")
     p.add_argument("--freq", type=float, default=1000.0, help="sine frequency Hz")
     p.add_argument("--chirp-f1", type=float, default=100.0, help="chirp/sweep start frequency Hz")
     p.add_argument("--chirp-f2", type=float, default=5000.0, help="chirp/sweep end frequency Hz")
     p.add_argument("--sweep-period", type=float, default=8.0, help="sweep cycle duration seconds")
+    p.add_argument("--harmonics", type=int, default=7, help="number of harmonics (harmonic waveform)")
     p.add_argument("--amplitude", type=float, default=1.0)
     p.add_argument("--noise-std", type=float, default=0.3)
     p.add_argument("--topic", default="raw.gen.chA")
@@ -58,6 +59,22 @@ def _generate(args: argparse.Namespace, phase_offset: int) -> np.ndarray:
         # Continuous-phase FM: frequency triangle-sweeps f1→f2→f1, no jumps between blocks
         phase = _sweep_phase(t, args.chirp_f1, args.chirp_f2, args.sweep_period)
         samples = args.amplitude * np.sin(phase)
+    elif args.waveform == "harmonic":
+        # Harmonic series: f0 + 2f0 + 3f0 ... with 1/k amplitude decay.
+        # f0 itself slowly sweeps between chirp_f1 and chirp_f2 (triangle LFO).
+        # k-th harmonic phase = k * phase_fundamental (mathematically continuous).
+        phase_fund = _sweep_phase(t, args.chirp_f1, args.chirp_f2, args.sweep_period)
+        nyquist = SAMPLE_RATE_HZ / 2
+        # Check max harmonic frequency at the highest f0 to decide how many fit
+        max_f0 = args.chirp_f2
+        n_harmonics = min(args.harmonics, int(nyquist / max_f0))
+        samples = np.zeros(N_SAMPLES)
+        for k in range(1, n_harmonics + 1):
+            samples += (args.amplitude / k) * np.sin(k * phase_fund)
+        # Normalize to requested amplitude
+        peak = float(np.max(np.abs(samples)))
+        if peak > 0:
+            samples *= args.amplitude / peak
     else:  # chirp — single-block instantaneous sweep
         T = 1.0
         phase = 2 * math.pi * (args.chirp_f1 * t + (args.chirp_f2 - args.chirp_f1) * t**2 / (2 * T))
