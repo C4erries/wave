@@ -1,0 +1,45 @@
+name: "chirp_sweep"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_chA
+    type: synth
+    params:
+      waveform: chirp
+      chirp_f1: 200
+      chirp_f2: 8000
+      amplitude: 1.0
+      topic: raw.gen.chA
+      rate: 10
+
+operators:
+  - name: fft_chA
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-chirp-chA
+
+  - name: filter_chA
+    type: filter
+    params:
+      input_topic: raw.gen.chA
+      output_topic: filtered.gen.chA
+      group_id: filter-chirp
+      low_hz: 2000
+      high_hz: 6000
+
+  - name: stats_chA
+    type: stats
+    params:
+      input_topic: raw.gen.chA
+      output_topic: stats.gen.chA
+      group_id: stats-chirp
+
+  - name: threshold_chA
+    type: threshold
+    params:
+      input_topic: raw.gen.chA
+      output_topic: events.gen.chA
+      group_id: threshold-chirp
+      threshold_mv: 0.85

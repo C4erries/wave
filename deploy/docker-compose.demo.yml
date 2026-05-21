@@ -1,3 +1,12 @@
+x-python: &python-base
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile.integration
+  depends_on:
+    broker:
+      condition: service_healthy
+  restart: on-failure
+
 services:
   broker:
     build:
@@ -26,6 +35,7 @@ services:
       args:
         VITE_API_BASE_URL: ""
         VITE_METRICS_URL: ""
+        VITE_ORCHESTRATOR_URL: ""
     container_name: wave-ui
     depends_on:
       broker:
@@ -34,37 +44,34 @@ services:
       - "8080:80"
 
   wave-gen:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.integration
+    <<: *python-base
     container_name: wave-gen
     command: wave-gen --waveform=sine --freq=1000 --rate=10 --broker=broker:7912
-    depends_on:
-      broker:
-        condition: service_healthy
-    restart: on-failure
 
   wave-fft-gen:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.integration
+    <<: *python-base
     container_name: wave-fft-gen
     command: wave-fft --input-topic=raw.gen.chA --output-topic=spectrum.gen.chA --group-id=fft-gen --broker=broker:7912
-    depends_on:
-      broker:
-        condition: service_healthy
-    restart: on-failure
+
+  wave-stats-gen:
+    <<: *python-base
+    container_name: wave-stats-gen
+    command: wave-stats --input-topic=raw.gen.chA --output-topic=stats.gen.chA --group-id=stats-gen --broker=broker:7912
+
+  wave-filter-gen:
+    <<: *python-base
+    container_name: wave-filter-gen
+    command: wave-filter --input-topic=raw.gen.chA --output-topic=filtered.gen.chA --group-id=filter-gen --low-hz=500 --high-hz=1500 --broker=broker:7912
+
+  wave-threshold-gen:
+    <<: *python-base
+    container_name: wave-threshold-gen
+    command: wave-threshold --input-topic=raw.gen.chA --output-topic=events.gen.chA --group-id=threshold-gen --threshold-mv=0.8 --broker=broker:7912
 
   wave-fft-osc:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.integration
+    <<: *python-base
     container_name: wave-fft-osc
-    command: wave-fft --input-topic=raw.osc.chA --output-topic=spectrum.osc.chA --group-id=fft-osc-chA --broker=broker:7912
-    depends_on:
-      broker:
-        condition: service_healthy
-    restart: on-failure
+    command: wave-fft --input-topic=raw.osc.chA --output-topic=spectrum.osc.chA --group-id=fft-osc --broker=broker:7912
 
 volumes:
   wave_demo_data:

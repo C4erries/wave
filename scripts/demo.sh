@@ -2,39 +2,55 @@
 set -e
 cd "$(dirname "$0")/.."
 
+SCENARIO="${1:-full_pipeline}"
+CONFIGS="components/orchestrator/configs"
+VENV="components/integration/.venv"
+
+if [ ! -f "$CONFIGS/$SCENARIO.yaml" ]; then
+  echo "Error: scenario '$SCENARIO' not found in $CONFIGS/"
+  echo "Available: $(ls $CONFIGS/*.yaml | xargs -n1 basename | sed 's/\.yaml//' | tr '\n' ' ')"
+  exit 1
+fi
+
 echo "==> Starting broker + UI..."
 docker compose -f deploy/docker-compose.dev.yml up -d broker ui
 
-echo "==> Waiting for broker to be ready..."
+echo "==> Waiting for broker..."
 until curl -sf http://localhost:8090/api/broker > /dev/null 2>&1; do
   sleep 1
 done
 echo "    Broker ready."
 
-echo "==> Activating Python venv..."
-source components/integration/.venv/bin/activate
+echo "==> Activating venv..."
+# shellcheck disable=SC1090
+source "$VENV/bin/activate"
 
-echo "==> Starting wave-gen (sine 1000 Hz)..."
-wave-gen --waveform=sine --freq=1000 &
-echo $! > /tmp/wave-gen.pid
+# Kill any leftover orchestrator from previous run
+if [ -f /tmp/wave-orchestrator.pid ]; then
+  kill "$(cat /tmp/wave-orchestrator.pid)" 2>/dev/null || true
+  rm -f /tmp/wave-orchestrator.pid
+fi
+wave-orchestrator stop 2>/dev/null || true
 
-echo "==> Starting wave-fft for gen pipeline..."
-wave-fft --input-topic=raw.gen.chA --output-topic=spectrum.gen.chA \
-         --group-id=fft-gen &
-echo $! > /tmp/wave-fft-gen.pid
+echo "==> Starting orchestrator (scenario: $SCENARIO)..."
+wave-orchestrator start --config "$CONFIGS/$SCENARIO.yaml" --serve-api &
+echo $! > /tmp/wave-orchestrator.pid
+sleep 2
 
-echo "==> Starting wave-fft for osc pipeline (waiting for wave-osc)..."
-wave-fft --input-topic=raw.osc.chA --output-topic=spectrum.osc.chA \
-         --group-id=fft-osc-chA &
-echo $! > /tmp/wave-fft-osc.pid
+wave-orchestrator status
 
-echo ""
-echo "Demo stack ready."
-echo "  UI:          http://localhost:8080/lab"
-echo "  Broker API:  http://localhost:8090"
-echo ""
-echo "To connect oscilloscope data:"
-echo "  wave-osc --source=synth --synth-freq=1500 --topic=raw.osc.chA"
-echo "  # or use: components/osc-adapter-gui/run.sh"
-echo ""
-echo "Run scripts/stop.sh to stop everything."
+cat <<EOF
+
+  UI:           http://localhost:8080
+  Lab:          http://localhost:8080/lab
+  Constructor:  http://localhost:8080/constructor
+  Metrics:      http://localhost:8080/metrics
+  Topics:       http://localhost:8080/topics
+  Orchestrator: http://localhost:8099/status
+
+  Scenario:     $SCENARIO
+  Available:    $(ls $CONFIGS/*.yaml | xargs -n1 basename | sed 's/\.yaml//' | tr '\n' ' ')
+
+  Switch live:  wave-orchestrator reload --config $CONFIGS/<name>.yaml
+  Stop:         scripts/stop.sh
+EOF

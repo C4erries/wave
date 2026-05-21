@@ -1,0 +1,44 @@
+name: "noise_band"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_noise
+    type: synth
+    params:
+      waveform: noise
+      noise_std: 0.5
+      amplitude: 1.0
+      topic: raw.gen.chA
+      rate: 10
+
+operators:
+  - name: fft_raw
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-noise-raw
+
+  - name: filter_narrow
+    type: filter
+    params:
+      input_topic: raw.gen.chA
+      output_topic: filtered.gen.chA
+      group_id: filter-noise
+      low_hz: 900
+      high_hz: 1100
+
+  - name: stats_noise
+    type: stats
+    params:
+      input_topic: raw.gen.chA
+      output_topic: stats.gen.chA
+      group_id: stats-noise
+
+  - name: threshold_noise
+    type: threshold
+    params:
+      input_topic: raw.gen.chA
+      output_topic: events.gen.chA
+      group_id: threshold-noise
+      threshold_mv: 0.4

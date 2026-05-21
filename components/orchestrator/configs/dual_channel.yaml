@@ -1,0 +1,52 @@
+name: "dual_channel"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_chA
+    type: synth
+    params:
+      waveform: sine
+      freq: 440
+      amplitude: 1.0
+      topic: raw.gen.chA
+      rate: 10
+      channel_id: 0
+
+  - name: gen_chB
+    type: synth
+    params:
+      waveform: sine
+      freq: 660
+      amplitude: 0.7
+      topic: raw.gen.chB
+      rate: 10
+      channel_id: 1
+
+operators:
+  - name: fft_chA
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-dual-chA
+
+  - name: fft_chB
+    type: fft
+    params:
+      input_topic: raw.gen.chB
+      output_topic: spectrum.gen.chB
+      group_id: fft-dual-chB
+
+  - name: stats_chA
+    type: stats
+    params:
+      input_topic: raw.gen.chA
+      output_topic: stats.gen.chA
+      group_id: stats-dual-chA
+
+  - name: stats_chB
+    type: stats
+    params:
+      input_topic: raw.gen.chB
+      output_topic: stats.gen.chB
+      group_id: stats-dual-chB

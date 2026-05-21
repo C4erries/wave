@@ -7,8 +7,10 @@ WORKDIR /app
 COPY wave-python-sdk /app/wave-python-sdk
 COPY components/integration /app/integration
 
-RUN pip install --no-cache-dir -e /app/wave-python-sdk && \
-    pip install --no-cache-dir -e /app/integration
+RUN pip install --no-cache-dir numpy PyYAML && \
+    pip install --no-cache-dir /app/wave-python-sdk && \
+    pip install --no-cache-dir /app/integration
 
+# Entry points: wave-gen, wave-fft, wave-stats, wave-filter, wave-threshold
 # Specify command via compose, e.g.:
 #   command: wave-gen --waveform=sine --freq=1000 --rate=10
