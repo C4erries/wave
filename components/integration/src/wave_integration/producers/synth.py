@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import random
 import time
 
 import numpy as np
@@ -85,7 +86,7 @@ def main() -> None:
             break
         except WaveMQConnectionError:
             print(f"[synth] connection lost, reconnect in 2s...")
-            time.sleep(2)
+            time.sleep(2 + random.uniform(0, 3))
 
     print(f"[synth] stopped after {block_count} blocks")
 

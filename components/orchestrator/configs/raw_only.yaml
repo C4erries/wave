@@ -8,6 +8,6 @@ sources:
       waveform: sine
       freq: 1000
       topic: raw.gen.chA
-      rate: 10
+      rate: 5
 
 # No operators — raw stream only; wave-ui can subscribe to raw.gen.chA directly.

@@ -8,7 +8,7 @@ sources:
       waveform: sine
       freq: 1000
       topic: raw.gen.chA
-      rate: 10
+      rate: 5
 
 operators:
   - name: fft_gen_chA

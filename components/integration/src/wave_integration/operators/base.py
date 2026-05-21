@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 import time
 import traceback
 from typing import Optional
@@ -77,9 +78,9 @@ class Operator:
                 break
             except TopicNotFoundError:
                 logger.info("[%s] topic %s not found, retry in 5s...", self.group_id, self.input_topic)
-                time.sleep(5)
+                time.sleep(5 + random.uniform(0, 2))
             except WaveMQConnectionError:
                 logger.warning("[%s] connection lost, reconnect in 2s...", self.group_id)
-                time.sleep(2)
+                time.sleep(2 + random.uniform(0, 3))
 
         logger.info("[%s] stopped, total processed=%d", self.group_id, n_processed)

@@ -9,7 +9,7 @@ sources:
       freq: 440
       amplitude: 1.0
       topic: raw.gen.chA
-      rate: 10
+      rate: 5
       channel_id: 0
 
   - name: gen_chB
@@ -19,7 +19,7 @@ sources:
       freq: 660
       amplitude: 0.7
       topic: raw.gen.chB
-      rate: 10
+      rate: 5
       channel_id: 1
 
 operators:

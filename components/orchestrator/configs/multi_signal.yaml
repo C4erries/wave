@@ -8,7 +8,7 @@ sources:
       waveform: sine
       freq: 1000
       topic: raw.gen.chA
-      rate: 10
+      rate: 5
 
   - name: gen_chB_chirp
     type: synth
@@ -17,7 +17,7 @@ sources:
       chirp_f1: 100
       chirp_f2: 5000
       topic: raw.gen.chB
-      rate: 10
+      rate: 5
 
 operators:
   - name: fft_chA

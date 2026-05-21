@@ -9,7 +9,7 @@ sources:
       noise_std: 0.5
       amplitude: 1.0
       topic: raw.gen.chA
-      rate: 10
+      rate: 5
 
 operators:
   - name: fft_raw
