@@ -1,0 +1,43 @@
+name: "full_pipeline"
+broker: "127.0.0.1:7912"
+
+sources:
+  - name: gen_chA
+    type: synth
+    params:
+      waveform: sine
+      freq: 1000
+      topic: raw.gen.chA
+      rate: 10
+
+operators:
+  - name: fft_gen_chA
+    type: fft
+    params:
+      input_topic: raw.gen.chA
+      output_topic: spectrum.gen.chA
+      group_id: fft-gen-chA
+
+  - name: stats_gen_chA
+    type: stats
+    params:
+      input_topic: raw.gen.chA
+      output_topic: stats.gen.chA
+      group_id: stats-gen-chA
+
+  - name: filter_gen_chA
+    type: filter
+    params:
+      input_topic: raw.gen.chA
+      output_topic: filtered.gen.chA
+      group_id: filter-gen-chA
+      low_hz: 500
+      high_hz: 1500
+
+  - name: threshold_gen_chA
+    type: threshold
+    params:
+      input_topic: raw.gen.chA
+      output_topic: events.gen.chA
+      group_id: threshold-gen-chA
+      threshold_mv: 0.8

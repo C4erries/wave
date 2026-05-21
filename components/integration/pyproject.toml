@@ -20,6 +20,9 @@ dev = ["pytest"]
 wave-gen = "wave_integration.producers.synth:main"
 wave-fft = "wave_integration.operators.fft_op:main"
 wave-osc = "wave_integration.producers.osc:main"
+wave-stats = "wave_integration.operators.stats_op:main"
+wave-filter = "wave_integration.operators.filter_op:main"
+wave-threshold = "wave_integration.operators.threshold_op:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

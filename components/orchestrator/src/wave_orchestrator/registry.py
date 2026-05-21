@@ -7,6 +7,9 @@ SOURCE_TYPES: dict[str, str] = {
 
 OPERATOR_TYPES: dict[str, str] = {
     "fft": "wave-fft",
+    "stats": "wave-stats",
+    "filter": "wave-filter",
+    "threshold": "wave-threshold",
 }
 
 
