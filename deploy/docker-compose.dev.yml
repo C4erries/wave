@@ -14,6 +14,12 @@ services:
       - "8090:8090"
     volumes:
       - wave_dev_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8090/api/broker"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
   ui:
     build:
