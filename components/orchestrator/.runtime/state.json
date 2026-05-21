@@ -1,1 +1,102 @@
-{}
+{
+  "mode": "chirp_sweep",
+  "processes": [
+    {
+      "name": "gen_chA",
+      "type": "synth",
+      "kind": "source",
+      "pid": 48483,
+      "cmd": [
+        "wave-gen",
+        "--waveform",
+        "chirp",
+        "--chirp-f1",
+        "200",
+        "--chirp-f2",
+        "8000",
+        "--amplitude",
+        "1.0",
+        "--topic",
+        "raw.gen.chA",
+        "--rate",
+        "5",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "fft_chA",
+      "type": "fft",
+      "kind": "operator",
+      "pid": 48511,
+      "cmd": [
+        "wave-fft",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "spectrum.gen.chA",
+        "--group-id",
+        "fft-chirp-chA",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "filter_chA",
+      "type": "filter",
+      "kind": "operator",
+      "pid": 48512,
+      "cmd": [
+        "wave-filter",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "filtered.gen.chA",
+        "--group-id",
+        "filter-chirp",
+        "--low-hz",
+        "2000",
+        "--high-hz",
+        "6000",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "stats_chA",
+      "type": "stats",
+      "kind": "operator",
+      "pid": 48513,
+      "cmd": [
+        "wave-stats",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "stats.gen.chA",
+        "--group-id",
+        "stats-chirp",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "threshold_chA",
+      "type": "threshold",
+      "kind": "operator",
+      "pid": 48514,
+      "cmd": [
+        "wave-threshold",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "events.gen.chA",
+        "--group-id",
+        "threshold-chirp",
+        "--threshold-mv",
+        "0.85",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@ if [ ! -f "$CONFIGS/$SCENARIO.yaml" ]; then
 fi
 
 echo "==> Starting broker + UI..."
-docker compose -f deploy/docker-compose.dev.yml up -d broker ui
+docker compose -f deploy/docker-compose.dev.yml up --build -d broker ui
 
 echo "==> Waiting for broker..."
 until curl -sf http://localhost:8090/api/broker > /dev/null 2>&1; do
