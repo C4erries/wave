@@ -6,6 +6,7 @@ import time
 
 import numpy as np
 from wavemq import WaveMQClient
+from wavemq.errors import WaveMQConnectionError
 
 from wave_integration.codec import encode_block
 
@@ -48,47 +49,43 @@ def _generate(args: argparse.Namespace, phase_offset: int) -> np.ndarray:
 def main() -> None:
     args = _build_parser().parse_args()
 
-    try:
-        with WaveMQClient(args.broker, transport="tcp") as client:
-            client.ensure_topic(args.topic, partitions=1, replication_factor=1)
-            print(f"[synth] topic={args.topic} ready, starting waveform={args.waveform}")
+    phase_offset = 0
+    block_count = 0
+    start_time = time.monotonic()
 
-            phase_offset = 0
-            block_count = 0
-            start_time = time.monotonic()
+    while True:
+        try:
+            with WaveMQClient(args.broker, transport="tcp") as client:
+                client.ensure_topic(args.topic, partitions=1, replication_factor=1)
+                print(f"[synth] topic={args.topic} ready, starting waveform={args.waveform}")
 
-            while True:
-                if args.duration > 0 and time.monotonic() - start_time >= args.duration:
-                    break
+                while True:
+                    if args.duration > 0 and time.monotonic() - start_time >= args.duration:
+                        print(f"[synth] stopped after {block_count} blocks")
+                        return
 
-                samples = _generate(args, phase_offset)
-                ts = time.time_ns()
-                data = encode_block(
-                    ts,
-                    SAMPLE_RATE_HZ,
-                    args.channel_id,
-                    args.source_id,
-                    samples,
-                )
-                r = client.produce_one_to_partition(
-                    args.topic,
-                    0,
-                    data,
-                    content_type="application/octet-stream",
-                )
-                phase_offset += N_SAMPLES
-                block_count += 1
-
-                if block_count == 1 or block_count % 100 == 0:
-                    print(
-                        f"[synth] topic={args.topic} offset={r.base_offset} "
-                        f"waveform={args.waveform} blocks={block_count}"
+                    samples = _generate(args, phase_offset)
+                    ts = time.time_ns()
+                    data = encode_block(ts, SAMPLE_RATE_HZ, args.channel_id, args.source_id, samples)
+                    r = client.produce_one_to_partition(
+                        args.topic, 0, data, content_type="application/octet-stream",
                     )
+                    phase_offset += N_SAMPLES
+                    block_count += 1
 
-                time.sleep(1.0 / args.rate)
+                    if block_count == 1 or block_count % 100 == 0:
+                        print(
+                            f"[synth] topic={args.topic} offset={r.base_offset} "
+                            f"waveform={args.waveform} blocks={block_count}"
+                        )
 
-    except KeyboardInterrupt:
-        pass
+                    time.sleep(1.0 / args.rate)
+
+        except KeyboardInterrupt:
+            break
+        except WaveMQConnectionError:
+            print(f"[synth] connection lost, reconnect in 2s...")
+            time.sleep(2)
 
     print(f"[synth] stopped after {block_count} blocks")
 

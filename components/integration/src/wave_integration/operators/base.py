@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import time
 import traceback
 from typing import Optional
 
 from wavemq import WaveMQClient
+from wavemq.errors import TopicNotFoundError, WaveMQConnectionError
 
 from wave_integration.codec import decode_block
 
@@ -54,23 +56,30 @@ class Operator:
             if n_processed == 1 or n_processed % 50 == 0:
                 logger.info("[%s] processed=%d", self.group_id, n_processed)
 
-        try:
-            with WaveMQClient(self.broker_addr, transport="tcp") as client:
-                client.ensure_topic(self.output_topic, partitions=1, replication_factor=1)
-                logger.info("[%s] %s -> %s", self.group_id, self.input_topic, self.output_topic)
-                client.consume_poll(
-                    group=self.group_id,
-                    topic=self.input_topic,
-                    partition=0,
-                    start_from="earliest",
-                    use_committed=True,
-                    max_messages=0,
-                    poll_interval=self.poll_interval,
-                    commit=True,
-                    stop_when_caught_up=False,
-                    on_record=_on_record,
-                )
-        except KeyboardInterrupt:
-            pass
+        while True:
+            try:
+                with WaveMQClient(self.broker_addr, transport="tcp") as client:
+                    client.ensure_topic(self.output_topic, partitions=1, replication_factor=1)
+                    logger.info("[%s] %s -> %s", self.group_id, self.input_topic, self.output_topic)
+                    client.consume_poll(
+                        group=self.group_id,
+                        topic=self.input_topic,
+                        partition=0,
+                        start_from="earliest",
+                        use_committed=True,
+                        max_messages=0,
+                        poll_interval=self.poll_interval,
+                        commit=True,
+                        stop_when_caught_up=False,
+                        on_record=_on_record,
+                    )
+            except KeyboardInterrupt:
+                break
+            except TopicNotFoundError:
+                logger.info("[%s] topic %s not found, retry in 5s...", self.group_id, self.input_topic)
+                time.sleep(5)
+            except WaveMQConnectionError:
+                logger.warning("[%s] connection lost, reconnect in 2s...", self.group_id)
+                time.sleep(2)
 
         logger.info("[%s] stopped, total processed=%d", self.group_id, n_processed)
