@@ -13,10 +13,7 @@ services:
       - "1883:1883"
       - "8090:8090"
     volumes:
-      - type: tmpfs
-        target: /data
-        tmpfs:
-          mode: 0777
+      - wave_dev_data:/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8090/api/broker"]
@@ -36,3 +33,5 @@ services:
     ports:
       - "8080:80"
 
+volumes:
+  wave_dev_data:
