@@ -1,67 +1,102 @@
 # Wave
 
-Streaming oscilloscope data pipeline: PicoScope 5000a (or synthetic source) →
-message broker → FFT operator → web UI with live charts.
+Потоковый пайплайн обработки осциллографических данных.
 
-## Quick start
+Данные поступают от синтетического генератора или PicoScope 5000a, проходят через брокер сообщений, обрабатываются FFT/фильтром/статистикой и отображаются в веб-интерфейсе в реальном времени.
+
+## Быстрый старт
 
 ```bash
 git clone --recurse-submodules <repo-url>
 cd wave
-scripts/demo.sh
-# Open http://localhost:8080/lab
+./scripts/demo.sh
+# Открыть http://localhost:8080/lab
 ```
 
-## Components
-
-| Path | Description |
-|------|-------------|
-| [components/integration/](components/integration/) | Python pipeline layer (codec, sources, producers, operators) |
-| [components/osc-adapter-gui/](components/osc-adapter-gui/) | tkinter GUI adapter for the oscilloscope |
-| [components/orchestrator/](components/orchestrator/) | Planned YAML orchestrator |
-| [wave-mq/](wave-mq/) | Message broker (Go, submodule) |
-| [wave-ui/](wave-ui/) | React web UI (submodule) |
-| [wave-python-sdk/](wave-python-sdk/) | Python client SDK (submodule) |
-| [OscilloscopeSupplyFIXed/](OscilloscopeSupplyFIXed/) | C# PicoScope 5000a application |
-| [deploy/](deploy/) | Docker Compose files |
-| [scripts/](scripts/) | demo.sh, dev.sh, stop.sh |
-| [docs/](docs/) | Architecture documentation |
-
-## CLI commands
+По умолчанию запускается сценарий `full_pipeline`. Передать другой сценарий первым аргументом:
 
 ```bash
-# Activate integration venv first:
+./scripts/demo.sh chirp_sweep
+./scripts/demo.sh harmonic_sweep
+./scripts/demo.sh noise_band
+./scripts/demo.sh multi_signal
+```
+
+## Компоненты
+
+| Путь | Описание |
+|------|----------|
+| [components/integration/](components/integration/) | Python-слой пайплайна: кодек, источники, операторы |
+| [components/orchestrator/](components/orchestrator/) | YAML-оркестратор — запускает и управляет процессами |
+| [components/osc-adapter-gui/](components/osc-adapter-gui/) | tkinter GUI-адаптер для PicoScope |
+| [wave-mq/](wave-mq/) | Брокер сообщений (Go, субмодуль) |
+| [wave-ui/](wave-ui/) | Веб-интерфейс (React + TypeScript, субмодуль) |
+| [wave-python-sdk/](wave-python-sdk/) | Python-клиент SDK (субмодуль) |
+| [OscilloscopeSupplyFIXed/](OscilloscopeSupplyFIXed/) | C# приложение для PicoScope 5000a |
+| [deploy/](deploy/) | Docker Compose файлы и Dockerfile |
+| [scripts/](scripts/) | demo.sh, dev.sh, stop.sh |
+| [docs/](docs/) | Документация, планы, курсовая работа |
+
+## Адреса после запуска
+
+| Страница | URL |
+|----------|-----|
+| Dashboard | http://localhost:8080 |
+| Осциллограф + FFT | http://localhost:8080/lab |
+| Конструктор пайплайна | http://localhost:8080/constructor |
+| Метрики топиков | http://localhost:8080/metrics |
+| Список топиков | http://localhost:8080/topics |
+| Статус оркестратора | http://localhost:8099/status |
+
+## CLI команды
+
+```bash
+# Активировать виртуальное окружение:
 source components/integration/.venv/bin/activate
 
-wave-gen --waveform=sine --freq=1000            # synthetic generator
-wave-osc --source=synth --synth-freq=1500       # oscilloscope adapter
-wave-fft --input-topic=raw.gen.chA              # FFT operator
-wave-osc-gui                                    # GUI adapter (separate venv)
+wave-gen --waveform=sine --freq=1000            # синтетический генератор
+wave-fft --input-topic=raw.gen.chA              # FFT оператор
+wave-filter --input-topic=raw.gen.chA --low-hz=500 --high-hz=2000  # полосовой фильтр
+wave-stats --input-topic=raw.gen.chA            # статистика (RMS, min, max)
+wave-threshold --input-topic=raw.gen.chA --threshold-mv=0.8        # пороговые события
+wave-orchestrator start --config components/orchestrator/configs/full_pipeline.yaml --serve-api
 ```
 
-## Architecture
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full data flow, topic table,
-and binary frame format.
-
-## Broker endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `localhost:7912` | Binary protocol (TCP) |
-| `localhost:1883` | MQTT |
-| `http://localhost:8090` | HTTP admin API |
-| `http://localhost:8080` | Web UI |
-
-## Scripts
+## Переключение сценария без перезапуска
 
 ```bash
-scripts/demo.sh    # start full demo stack
-scripts/dev.sh     # start broker + UI only
-scripts/stop.sh    # stop everything
+source components/integration/.venv/bin/activate
+wave-orchestrator reload --config components/orchestrator/configs/chirp_sweep.yaml
 ```
 
----
+## Сценарии
 
-> Legacy: `docker-compose.single.yml` / `docker-compose.multi.yml` in root still work
-> for running broker+UI without the Python pipeline.
+| Сценарий | Описание |
+|----------|----------|
+| `full_pipeline` | Синусоида sweep 300–3000 Гц, фильтр 800–2000 Гц |
+| `chirp_sweep` | Широкий sweep 100–8000 Гц — самый зрелищный |
+| `harmonic_sweep` | Гармонический ряд, гребёнка пиков f0…8f0 |
+| `noise_band` | Белый шум → узкополосный фильтр 900–1100 Гц |
+| `multi_signal` | Два независимых канала с разными диапазонами |
+
+## Архитектура
+
+Подробная схема топиков, форматов и потоков данных — в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+Руководство по демонстрации и сценарии для скриншотов — в [docs/DEMO.md](docs/DEMO.md).
+
+## Скрипты
+
+```bash
+./scripts/demo.sh [сценарий]  # запустить полный стек
+./scripts/dev.sh              # только брокер + UI (без генераторов)
+./scripts/stop.sh             # остановить всё
+```
+
+## Брокер
+
+| Протокол | Адрес |
+|----------|-------|
+| TCP (бинарный) | localhost:7912 |
+| MQTT | localhost:1883 |
+| HTTP API | http://localhost:8090 |
