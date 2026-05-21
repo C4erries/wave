@@ -12,6 +12,22 @@ if [ ! -f "$CONFIGS/$SCENARIO.yaml" ]; then
   exit 1
 fi
 
+cleanup() {
+  echo ""
+  echo "==> Stopping orchestrator..."
+  wave-orchestrator stop 2>/dev/null || true
+  if [ -f /tmp/wave-orchestrator.pid ]; then
+    kill "$(cat /tmp/wave-orchestrator.pid)" 2>/dev/null || true
+    rm -f /tmp/wave-orchestrator.pid
+  fi
+  pkill -f "wave-gen|wave-fft|wave-stats|wave-filter|wave-threshold" 2>/dev/null || true
+  echo "==> Stopping Docker services..."
+  docker compose -f deploy/docker-compose.dev.yml down 2>/dev/null || true
+  echo "Stopped."
+  exit 0
+}
+trap cleanup INT TERM
+
 echo "==> Starting broker + UI..."
 docker compose -f deploy/docker-compose.dev.yml up --build -d broker ui
 
@@ -34,7 +50,8 @@ wave-orchestrator stop 2>/dev/null || true
 
 echo "==> Starting orchestrator (scenario: $SCENARIO)..."
 wave-orchestrator start --config "$CONFIGS/$SCENARIO.yaml" --serve-api &
-echo $! > /tmp/wave-orchestrator.pid
+ORCH_PID=$!
+echo $ORCH_PID > /tmp/wave-orchestrator.pid
 sleep 2
 
 wave-orchestrator status
@@ -52,5 +69,8 @@ cat <<EOF
   Available:    $(ls $CONFIGS/*.yaml | xargs -n1 basename | sed 's/\.yaml//' | tr '\n' ' ')
 
   Switch live:  wave-orchestrator reload --config $CONFIGS/<name>.yaml
-  Stop:         scripts/stop.sh
+  Stop:         Ctrl+C  (or scripts/stop.sh)
 EOF
+
+# Keep script alive so Ctrl+C triggers cleanup
+wait $ORCH_PID
