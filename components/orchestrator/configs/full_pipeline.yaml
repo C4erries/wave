@@ -5,8 +5,11 @@ sources:
   - name: gen_chA
     type: synth
     params:
-      waveform: sine
-      freq: 1000
+      waveform: sweep
+      chirp_f1: 300
+      chirp_f2: 3000
+      sweep_period: 10
+      amplitude: 1.0
       topic: raw.gen.chA
       rate: 5
 
@@ -31,8 +34,8 @@ operators:
       input_topic: raw.gen.chA
       output_topic: filtered.gen.chA
       group_id: filter-gen-chA
-      low_hz: 500
-      high_hz: 1500
+      low_hz: 800
+      high_hz: 2000
 
   - name: threshold_gen_chA
     type: threshold

@@ -1,1 +1,157 @@
-{}
+{
+  "mode": "multi_signal",
+  "processes": [
+    {
+      "name": "gen_chA",
+      "type": "synth",
+      "kind": "source",
+      "pid": 67489,
+      "cmd": [
+        "wave-gen",
+        "--waveform",
+        "sweep",
+        "--chirp-f1",
+        "200",
+        "--chirp-f2",
+        "4000",
+        "--sweep-period",
+        "8",
+        "--amplitude",
+        "1",
+        "--topic",
+        "raw.gen.chA",
+        "--rate",
+        "5",
+        "--channel-id",
+        "0",
+        "--freq",
+        "99",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "gen_chB",
+      "type": "osc",
+      "kind": "source",
+      "pid": 67490,
+      "cmd": [
+        "wave-osc",
+        "--source",
+        "synth",
+        "--topic",
+        "raw.osc.chA",
+        "--synth-waveform",
+        "sine",
+        "--synth-freq",
+        "1000",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "gen_chC",
+      "type": "synth",
+      "kind": "source",
+      "pid": 67491,
+      "cmd": [
+        "wave-gen",
+        "--waveform",
+        "sine",
+        "--freq",
+        "1000",
+        "--topic",
+        "raw.gen.chB",
+        "--rate",
+        "10",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "fft_chA",
+      "type": "fft",
+      "kind": "operator",
+      "pid": 67513,
+      "cmd": [
+        "wave-fft",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "spectrum.gen.chA",
+        "--group-id",
+        "fft-gen-chA",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "fft_chB",
+      "type": "fft",
+      "kind": "operator",
+      "pid": 67514,
+      "cmd": [
+        "wave-fft",
+        "--input-topic",
+        "raw.gen.chA",
+        "--output-topic",
+        "spectrum.gen.chB",
+        "--group-id",
+        "fft-gen-chB",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "fft_chC",
+      "type": "fft",
+      "kind": "operator",
+      "pid": 67515,
+      "cmd": [
+        "wave-fft",
+        "--input-topic",
+        "raw.gen.chB",
+        "--output-topic",
+        "spectrum.gen.chA",
+        "--group-id",
+        "fft-gen-chA",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "fft_chD",
+      "type": "fft",
+      "kind": "operator",
+      "pid": 67516,
+      "cmd": [
+        "wave-fft",
+        "--input-topic",
+        "raw.osc.chA",
+        "--output-topic",
+        "spectrum.gen.chA",
+        "--group-id",
+        "fft-gen-chA",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    },
+    {
+      "name": "Stats_chA",
+      "type": "stats",
+      "kind": "operator",
+      "pid": 67517,
+      "cmd": [
+        "wave-stats",
+        "--input-topic",
+        "spectrum.gen.chA",
+        "--output-topic",
+        "stats.gen.chA",
+        "--group-id",
+        "stats-gen-chA",
+        "--broker",
+        "127.0.0.1:7912"
+      ]
+    }
+  ]
+}

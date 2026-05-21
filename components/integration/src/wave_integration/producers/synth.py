@@ -17,10 +17,11 @@ SAMPLE_RATE_HZ = 100_000
 
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="wave-integration synthetic signal generator")
-    p.add_argument("--waveform", choices=("sine", "noise", "chirp"), default="sine")
+    p.add_argument("--waveform", choices=("sine", "noise", "chirp", "sweep"), default="sine")
     p.add_argument("--freq", type=float, default=1000.0, help="sine frequency Hz")
-    p.add_argument("--chirp-f1", type=float, default=100.0, help="chirp start frequency Hz")
-    p.add_argument("--chirp-f2", type=float, default=5000.0, help="chirp end frequency Hz")
+    p.add_argument("--chirp-f1", type=float, default=100.0, help="chirp/sweep start frequency Hz")
+    p.add_argument("--chirp-f2", type=float, default=5000.0, help="chirp/sweep end frequency Hz")
+    p.add_argument("--sweep-period", type=float, default=8.0, help="sweep cycle duration seconds")
     p.add_argument("--amplitude", type=float, default=1.0)
     p.add_argument("--noise-std", type=float, default=0.3)
     p.add_argument("--topic", default="raw.gen.chA")
@@ -32,6 +33,20 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _sweep_phase(t_abs: np.ndarray, f1: float, f2: float, T: float) -> np.ndarray:
+    """Continuous phase via integral of triangle-wave frequency — no discontinuities at block boundaries."""
+    phase_per_cycle = (f1 + f2) * T / 2  # ∫₀ᵀ f(τ)dτ
+    n_cyc = np.floor(t_abs / T)
+    t_cyc = t_abs % T
+    up = t_cyc <= T / 2
+    integral = np.where(
+        up,
+        f1 * t_cyc + (f2 - f1) * t_cyc ** 2 / T,
+        f1 * T / 2 + (f2 - f1) * T / 4 + f2 * (t_cyc - T / 2) - (f2 - f1) * (t_cyc - T / 2) ** 2 / T,
+    )
+    return 2 * math.pi * (n_cyc * phase_per_cycle + integral)
+
+
 def _generate(args: argparse.Namespace, phase_offset: int) -> np.ndarray:
     t = (phase_offset + np.arange(N_SAMPLES)) / SAMPLE_RATE_HZ
 
@@ -39,7 +54,11 @@ def _generate(args: argparse.Namespace, phase_offset: int) -> np.ndarray:
         samples = args.amplitude * np.sin(2 * math.pi * args.freq * t)
     elif args.waveform == "noise":
         samples = np.random.normal(0.0, args.noise_std, N_SAMPLES)
-    else:  # chirp
+    elif args.waveform == "sweep":
+        # Continuous-phase FM: frequency triangle-sweeps f1→f2→f1, no jumps between blocks
+        phase = _sweep_phase(t, args.chirp_f1, args.chirp_f2, args.sweep_period)
+        samples = args.amplitude * np.sin(phase)
+    else:  # chirp — single-block instantaneous sweep
         T = 1.0
         phase = 2 * math.pi * (args.chirp_f1 * t + (args.chirp_f2 - args.chirp_f1) * t**2 / (2 * T))
         samples = args.amplitude * np.sin(phase)

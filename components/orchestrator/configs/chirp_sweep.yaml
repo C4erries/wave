@@ -5,9 +5,10 @@ sources:
   - name: gen_chA
     type: synth
     params:
-      waveform: chirp
-      chirp_f1: 200
+      waveform: sweep
+      chirp_f1: 100
       chirp_f2: 8000
+      sweep_period: 6
       amplitude: 1.0
       topic: raw.gen.chA
       rate: 5

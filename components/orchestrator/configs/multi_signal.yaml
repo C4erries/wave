@@ -2,22 +2,29 @@ name: "multi_signal"
 broker: "127.0.0.1:7912"
 
 sources:
-  - name: gen_chA_sine
+  - name: gen_chA
     type: synth
     params:
-      waveform: sine
-      freq: 1000
+      waveform: sweep
+      chirp_f1: 200
+      chirp_f2: 4000
+      sweep_period: 8
+      amplitude: 1.0
       topic: raw.gen.chA
       rate: 5
+      channel_id: 0
 
-  - name: gen_chB_chirp
+  - name: gen_chB
     type: synth
     params:
-      waveform: chirp
-      chirp_f1: 100
-      chirp_f2: 5000
+      waveform: sweep
+      chirp_f1: 500
+      chirp_f2: 6000
+      sweep_period: 5
+      amplitude: 0.8
       topic: raw.gen.chB
       rate: 5
+      channel_id: 1
 
 operators:
   - name: fft_chA
